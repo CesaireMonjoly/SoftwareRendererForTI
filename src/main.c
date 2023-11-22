@@ -1,48 +1,58 @@
 #include <tice.h>
 #include <keypadc.h>
 #include <graphx.h>
+#include <debug.h>
 
-void bresenham(int8_t x0,int8_t y0,int8_t x1,int8_t y1);
-
+struct vec2 screenSpace(struct vec2 CoordinateSpace);
 
 struct vec3
 {
-    int8_t x;
-    int8_t y;
-    int8_t z;
+    int24_t x;
+    int24_t y;
+    int24_t z;
 };
 
 struct vec2
 {
-    int8_t x;
-    int8_t y;
+    int24_t x;
+    int24_t y;
 };
+
+struct vec2 screenSpace(struct vec2 CoordinateSpace)
+{
+    CoordinateSpace.x = CoordinateSpace.x + 160;
+    CoordinateSpace.y = (CoordinateSpace.y*(-1) + 120);
+    return CoordinateSpace;
+}
 
 int main(void)
 {
     os_ClrHome();
     gfx_Begin();
     gfx_SetDrawBuffer();
-
-    
+    gfx_SetColor(-1);
     //resolution = 320*240
-    int8_t fov = 3;
-    struct vec3 vert = {12, 50, 56};
-    
-    
-    struct vec2 pts1 = {10, 10};
-    struct vec2 pts2 = {60, 120};
-    gfx_SetColor(0);
+    //int8_t fov = 3;
+    //struct vec3 vert = {12, 50, 56};
 
+    struct vec2 pts1 = {-10, -10};
+    struct vec2 pts2 = {-60, 60};
 
-    bresenham(pts1.x, pts1.y, pts2.x, pts2.y);
+    dbg_printf("pts1 = %d, %d\n", pts1.x, pts1.y);
+    dbg_printf("pts2 = %d, %d\n", pts2.x, pts2.y);
+
+    pts1 = screenSpace(pts1);
+    pts2 = screenSpace(pts2);
+
+    dbg_printf("pts1 = %d, %d\n", pts1.x, pts1.y);
+    dbg_printf("pts2 = %d, %d\n", pts2.x, pts2.y);
 
     do
     {
+        gfx_Line(pts1.x, pts1.y, pts2.x, pts2.y);
         gfx_SetColor(0);
         gfx_SetPixel(0, 0);
         gfx_SwapDraw();
-    
     } while (kb_Data[1] != kb_2nd); //exit key
 
     gfx_ZeroScreen();
@@ -52,32 +62,5 @@ int main(void)
     return 0;
 }
 
-void bresenham(int8_t x0,int8_t y0,int8_t x1,int8_t y1)
-{
-	int8_t Distance_Y = y1-y0;
-	int8_t Distance_X = x1-x0;
-
-    int8_t X_screen = x0;
-    int8_t Y_screen = y0;
-
-    int8_t p = 2*Distance_X-Distance_Y;
-
-    while(X_screen<x1)
-    {
-        if(p>=0)
-        {
-            gfx_SetPixel(X_screen, Y_screen);
-            Y_screen=Y_screen+1;
-            p=p+2*Distance_Y-2*Distance_X;
-        }
-        else
-        {
-            gfx_SetPixel(X_screen, Y_screen);
-            p=p+2*Distance_Y-2*Distance_X;
-        }
-        X_screen=X_screen+1;
-    }
-    gfx_SwapDraw();
-}
 
 
