@@ -31,7 +31,7 @@ struct vec2 coordinateSpace(struct vec3 CamSpace, int dist)
     return CoordinateSpace;
 }
 
-void drawCube(int dist, int xpos)
+void drawCube(int dist)
 {
     struct vec3 CamSpace = {0, 0, 0};
     struct vec2 CoordinateSpace = {0, 0};
@@ -41,13 +41,13 @@ void drawCube(int dist, int xpos)
     {
         for (int y = 0; y < 4; y++)
         {
+            color_index = color_index + 8;
+            gfx_SetColor(color_index);
             for (int z = 0; z < 4; z++)
             {
-                color_index = color_index + 8;
-                gfx_SetColor(color_index);
-                CamSpace.x = (x*4)-xpos;
-                CamSpace.y = (y*4)-4;
-                CamSpace.z = (z*4);
+                CamSpace.x = (x*6)-4;
+                CamSpace.y = (y*6)-4;
+                CamSpace.z = (z*6);
                 CoordinateSpace = coordinateSpace(CamSpace, dist);
                 ScreenSpace = screenSpace(CoordinateSpace);
                 gfx_SetPixel(ScreenSpace.x, ScreenSpace.y);
@@ -65,14 +65,12 @@ int main(void)
     gfx_Begin();
     gfx_SetDrawBuffer();
     gfx_SetColor(0);
-    int fov = 5;
-    uint8_t xpos = 60;
+    int fov = 7;
 
     do
     {
         gfx_ZeroScreen();
-        drawCube(fov, xpos);
-        xpos = xpos + 1;
+        drawCube(fov);
         //gfx_Line(pts1.x, pts1.y, pts2.x, pts2.y);
         gfx_SetColor(0);
         gfx_SwapDraw();
