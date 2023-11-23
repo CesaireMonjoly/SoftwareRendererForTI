@@ -31,6 +31,32 @@ struct vec2 coordinateSpace(struct vec3 CamSpace, int dist)
     return CoordinateSpace;
 }
 
+void drawCube(int dist, int xpos)
+{
+    struct vec3 CamSpace = {0, 0, 0};
+    struct vec2 CoordinateSpace = {0, 0};
+    struct vec2 ScreenSpace = {0, 0};
+    int color_index = 7;
+    for (int x = 0; x < 4 ; x++)
+    {
+        for (int y = 0; y < 4; y++)
+        {
+            for (int z = 0; z < 4; z++)
+            {
+                color_index = color_index + 8;
+                gfx_SetColor(color_index);
+                CamSpace.x = (x*4)-xpos;
+                CamSpace.y = (y*4)-4;
+                CamSpace.z = (z*4);
+                CoordinateSpace = coordinateSpace(CamSpace, dist);
+                ScreenSpace = screenSpace(CoordinateSpace);
+                gfx_SetPixel(ScreenSpace.x, ScreenSpace.y);
+            }
+        }
+    }
+}
+
+
 int main(void)
 {
     //resolution = 320*240
@@ -38,29 +64,17 @@ int main(void)
     os_ClrHome();
     gfx_Begin();
     gfx_SetDrawBuffer();
-    gfx_SetColor(-1);
-    int fov = 3;
-    struct vec3 vert1 = {10, 10, 3};
-    struct vec3 vert2 = {10, 10, 2};
-
-    dbg_printf("vert1 = %d, %d, %d\n",vert1.x, vert1.y, vert1.z);
-    dbg_printf("vert1 = %d, %d, %d\n",vert2.x, vert2.y, vert2.z);
-
-    struct vec2 pts1 = coordinateSpace(vert1, fov);
-    struct vec2 pts2 = coordinateSpace(vert2, fov);
-
-    dbg_printf("pts1 = %d, %d\n",pts1.x, pts1.y);
-    dbg_printf("pts2 = %d, %d\n",pts2.x, pts2.y);
-
-    pts1 = screenSpace(pts1);
-    pts2 = screenSpace(pts2);
-
+    gfx_SetColor(0);
+    int fov = 5;
+    uint8_t xpos = 60;
 
     do
     {
-        gfx_Line(pts1.x, pts1.y, pts2.x, pts2.y);
+        gfx_ZeroScreen();
+        drawCube(fov, xpos);
+        xpos = xpos + 1;
+        //gfx_Line(pts1.x, pts1.y, pts2.x, pts2.y);
         gfx_SetColor(0);
-        gfx_SetPixel(0, 0);
         gfx_SwapDraw();
     } while (kb_Data[1] != kb_2nd); //exit key
 
