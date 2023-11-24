@@ -9,6 +9,19 @@
 //GFX_LCD_WIDTH
 //GFX_LCD_HEIGHT
 
+struct boolVec3
+{
+    bool x;
+    bool y;
+    bool z;
+};
+
+struct boolVec2
+{
+    bool x;
+    bool y;
+};
+
 struct vec3
 {
     int24_t x;
@@ -59,6 +72,19 @@ void applyMovement(struct vec3 Origin, struct vec3*Point, struct vec3 MovementVe
     Point->z = Point->z + dz;
 }
 
+void applyRotationZ(struct vec3 Origin, struct vec3*Point, int Angle)
+{
+    //cos = x
+    //sin = y
+    int dx = Origin.x - Point->x;
+    int dy = Origin.y - Point->y;
+
+    int dist = sqrt(dx*dx + dy*dy);
+    Point->x = Origin.x + dx + cos(Angle)*dist;
+    Point->y = Origin.y + dy + sin(Angle)*dist;
+
+}
+
 void drawCube(int Dist)
 {
     struct vec3 CamSpace = {0, 0, 0};
@@ -92,14 +118,29 @@ int main(void)
     os_ClrHome();
     gfx_Begin();
     gfx_SetDrawBuffer();
-    gfx_SetColor(0);
+    gfx_SetColor(255);
     int Fov = 7;
+    struct vec3 Origine = {0, 0, 0};
+    struct vec3 Point = {4, 3, 9};
+
+    struct vec2 Origine2D = {0, 0};
+    struct vec2 Point2D = {0, 0};
+
     do
     {
-        gfx_ZeroScreen();
-        drawCube(Fov);
+        gfx_SetColor(255);
+        applyRotationZ(Origine, &Point, 3);
+
+        Origine2D = coordinateSpace(Origine, Fov);
+        Origine2D = screenSpace(Origine2D);
+        Point2D = coordinateSpace(Point, Fov);
+        Point2D = screenSpace(Point2D);
+        gfx_SetPixel(Point2D.x, Point2D.y);
+        gfx_SetPixel(Origine2D.x, Origine2D.y);
+
         gfx_SetColor(0);
         gfx_SwapDraw();
+        gfx_ZeroScreen();
     } while (kb_Data[1] != kb_2nd); //exit key
 
     gfx_ZeroScreen();
