@@ -59,7 +59,7 @@ void applyMovement(struct vec3 Origin, struct vec3*Point, struct vec3 MovementVe
     Point->z = Point->z + dz;
 }
 
-void drawCube(int Dist, int Angle)
+void drawCube(int Dist)
 {
     struct vec3 CamSpace = {0, 0, 0};
     struct vec2 CoordinateSpace = {0, 0};
@@ -76,8 +76,6 @@ void drawCube(int Dist, int Angle)
                 CamSpace.x = x*8;
                 CamSpace.y = y*8;
                 CamSpace.z = z*8;
-
-
                 CoordinateSpace = coordinateSpace(CamSpace, Dist);
                 ScreenSpace = screenSpace(CoordinateSpace);
                 gfx_SetPixel(ScreenSpace.x, ScreenSpace.y);
@@ -96,13 +94,10 @@ int main(void)
     gfx_SetDrawBuffer();
     gfx_SetColor(0);
     int Fov = 7;
-    int Angle = 0;
-
     do
     {
         gfx_ZeroScreen();
-        Angle += 0;
-        drawCube(Fov, Angle);
+        drawCube(Fov);
         gfx_SetColor(0);
         gfx_SwapDraw();
     } while (kb_Data[1] != kb_2nd); //exit key
