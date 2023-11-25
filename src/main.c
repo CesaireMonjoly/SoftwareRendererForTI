@@ -74,22 +74,20 @@ void applyMovement(struct vec3 Origin, struct vec3*Point, struct vec3 MovementVe
 
 void applyRotationZ(struct vec3 Origin, struct vec3*Point, int Angle)
 {
-    //cos = x
-    //sin = y
-    int dx = Origin.x - Point->x;
-    int dy = Origin.y - Point->y;
-
-    int dist = sqrt(dx*dx + dy*dy);
-    Point->x = Origin.x + dx + cos(Angle)*dist;
-    Point->y = Origin.y + dy + sin(Angle)*dist;
-
+    double dx = (Point->x - Origin.x);
+    double dy = (Point->y - Origin.y);
+    double dist = sqrt(dx*dx + dy*dy);
+    dx = cos(Angle) * (dist);
+    dy = sin(Angle) * (dist);
+    Point->x = (int) round((double) Origin.x + dx);
+    Point->y = (int) round((double) Origin.y + dy);
 }
 
 void drawCube(int Dist)
 {
     struct vec3 CamSpace = {0, 0, 0};
-    struct vec2 CoordinateSpace = {0, 0};
-    struct vec2 ScreenSpace = {0, 0};
+    struct vec2 CoordinateSpace;
+    struct vec2 ScreenSpace;
     int Color_index = 7;
     for (int x = -2; x < 3 ; x++)
     {
@@ -121,15 +119,17 @@ int main(void)
     gfx_SetColor(255);
     int Fov = 7;
     struct vec3 Origine = {0, 0, 0};
-    struct vec3 Point = {4, 3, 9};
+    struct vec3 Point = {10, 6, 9};
 
-    struct vec2 Origine2D = {0, 0};
-    struct vec2 Point2D = {0, 0};
+    struct vec2 Origine2D;
+    struct vec2 Point2D;
+    int Angle = 0;
 
     do
     {
         gfx_SetColor(255);
-        applyRotationZ(Origine, &Point, 3);
+        Angle += 1;
+        applyRotationZ(Origine, &Point, Angle);
 
         Origine2D = coordinateSpace(Origine, Fov);
         Origine2D = screenSpace(Origine2D);
