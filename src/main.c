@@ -9,19 +9,6 @@
 //GFX_LCD_WIDTH
 //GFX_LCD_HEIGHT
 
-struct boolVec3
-{
-    bool x;
-    bool y;
-    bool z;
-};
-
-struct boolVec2
-{
-    bool x;
-    bool y;
-};
-
 struct vec3
 {
     int24_t x;
@@ -83,9 +70,32 @@ void applyRotationZ(struct vec3 Origin, struct vec3*Point, int Angle)
     Point->y = (int) round((double) Origin.y + dy);
 }
 
-void drawCube(int Dist)
+void applyRotationX(struct vec3 Origin, struct vec3*Point, int Angle)
+{
+    double dz = (Point->z - Origin.z);
+    double dy = (Point->y - Origin.y);
+    double dist = sqrt(dz*dz + dy*dy);
+    dz = cos(Angle) * (dist);
+    dy = sin(Angle) * (dist);
+    Point->z = (int) round((double) Origin.x + dz);
+    Point->y = (int) round((double) Origin.y + dy);
+}
+
+void applyRotationY(struct vec3 Origin, struct vec3*Point, int Angle)
+{
+    double dx = (Point->x - Origin.x);
+    double dz = (Point->z - Origin.z);
+    double dist = sqrt(dx*dx + dz*dz);
+    dx = cos(Angle) * (dist);
+    dz = sin(Angle) * (dist);
+    Point->x = (int) round((double) Origin.x + dx);
+    Point->z = (int) round((double) Origin.z + dz);
+}
+
+void drawCube(int Dist, struct vec3 MovementVector)
 {
     struct vec3 CamSpace = {0, 0, 0};
+    struct vec3 Origin = {0, 0, 0};
     struct vec2 CoordinateSpace;
     struct vec2 ScreenSpace;
     int Color_index = 7;
@@ -100,6 +110,7 @@ void drawCube(int Dist)
                 CamSpace.x = x*8;
                 CamSpace.y = y*8;
                 CamSpace.z = z*8;
+                applyMovement(Origin, &CamSpace, MovementVector);
                 CoordinateSpace = coordinateSpace(CamSpace, Dist);
                 ScreenSpace = screenSpace(CoordinateSpace);
                 gfx_SetPixel(ScreenSpace.x, ScreenSpace.y);
@@ -123,13 +134,12 @@ int main(void)
 
     struct vec2 Origine2D;
     struct vec2 Point2D;
-    int Angle = 0;
+    struct vec3 Move = {1, 0, 0};
 
     do
     {
         gfx_SetColor(255);
-        Angle += 1;
-        applyRotationZ(Origine, &Point, Angle);
+        drawCube(Fov, Move);
 
         Origine2D = coordinateSpace(Origine, Fov);
         Origine2D = screenSpace(Origine2D);
