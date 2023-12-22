@@ -6,8 +6,9 @@
 #include <stdlib.h>
 #include <math.h>
 
-//GFX_LCD_WIDTH
-//GFX_LCD_HEIGHT
+// GFX_LCD_WIDTH 320
+// GFX_LCD_HEIGHT 240
+#define MAX_VERTICES_NUMBER 64
 
 struct vec3
 {
@@ -15,11 +16,22 @@ struct vec3
     int24_t y;
     int24_t z;
 };
-
 struct vec2
 {
     int24_t x;
     int24_t y;
+};
+struct obj3
+{
+    int vertices_number;
+    struct vec3 vertices[MAX_VERTICES_NUMBER];
+
+};
+struct cam
+{
+    int fov;
+    struct vec3 pos;
+    struct vec2 aspect_ratio;
 };
 
 struct vec2 screenSpace(struct vec2 CoordinateSpace)
@@ -28,7 +40,6 @@ struct vec2 screenSpace(struct vec2 CoordinateSpace)
     CoordinateSpace.y = (CoordinateSpace.y*(-1) + 120);
     return CoordinateSpace;
 }
-
 struct vec2 coordinateSpace(struct vec3 CamSpace, int Dist)
 {
     struct vec2 CoordinateSpace;
@@ -37,116 +48,57 @@ struct vec2 coordinateSpace(struct vec3 CamSpace, int Dist)
     return CoordinateSpace;
 }
 
-void applyScale(struct vec3 Origin, struct vec3*Point, struct vec3 ScaleVector)
+void obj3Move(struct obj3 *Object, struct vec3 Vector)
 {
-    int dx = abs(Origin.x - Point->x)*ScaleVector.x;
-    int dy = abs(Origin.x - Point->y)*ScaleVector.y;
-    int dz = abs(Origin.z - Point->z)*ScaleVector.z;
-
-    Point->x = Point->x * dx;
-    Point->y = Point->y * dy;
-    Point->z = Point->z * dz;
-}
-
-void applyMovement(struct vec3 Origin, struct vec3*Point, struct vec3 MovementVector)
-{
-    int dx = abs(Origin.x - Point->x)*MovementVector.x;
-    int dy = abs(Origin.x - Point->y)*MovementVector.y;
-    int dz = abs(Origin.z - Point->z)*MovementVector.z;
-
-    Point->x = Point->x + dx;
-    Point->y = Point->y + dy;
-    Point->z = Point->z + dz;
-}
-
-void applyRotationZ(struct vec3 Origin, struct vec3*Point, int Angle)
-{
-    double dx = (Point->x - Origin.x);
-    double dy = (Point->y - Origin.y);
-    double dist = sqrt(dx*dx + dy*dy);
-    dx = cos(Angle) * (dist);
-    dy = sin(Angle) * (dist);
-    Point->x = (int) round((double) Origin.x + dx);
-    Point->y = (int) round((double) Origin.y + dy);
-}
-
-void applyRotationX(struct vec3 Origin, struct vec3*Point, int Angle)
-{
-    double dz = (Point->z - Origin.z);
-    double dy = (Point->y - Origin.y);
-    double dist = sqrt(dz*dz + dy*dy);
-    dz = cos(Angle) * (dist);
-    dy = sin(Angle) * (dist);
-    Point->z = (int) round((double) Origin.x + dz);
-    Point->y = (int) round((double) Origin.y + dy);
-}
-
-void applyRotationY(struct vec3 Origin, struct vec3*Point, int Angle)
-{
-    double dx = (Point->x - Origin.x);
-    double dz = (Point->z - Origin.z);
-    double dist = sqrt(dx*dx + dz*dz);
-    dx = cos(Angle) * (dist);
-    dz = sin(Angle) * (dist);
-    Point->x = (int) round((double) Origin.x + dx);
-    Point->z = (int) round((double) Origin.z + dz);
-}
-
-void drawCube(int Dist, struct vec3 MovementVector)
-{
-    struct vec3 CamSpace = {0, 0, 0};
-    struct vec3 Origin = {0, 0, 0};
-    struct vec2 CoordinateSpace;
-    struct vec2 ScreenSpace;
-    int Color_index = 7;
-    for (int x = -2; x < 3 ; x++)
+    for (int i = 0; i < Object->vertices_number; i++)
     {
-        for (int y = -2; y < 3; y++)
-        {
-            Color_index = Color_index + 8;
-            gfx_SetColor(Color_index);
-            for (int z = 0; z < 4; z++)
-            {
-                CamSpace.x = x*8;
-                CamSpace.y = y*8;
-                CamSpace.z = z*8;
-                applyMovement(Origin, &CamSpace, MovementVector);
-                CoordinateSpace = coordinateSpace(CamSpace, Dist);
-                ScreenSpace = screenSpace(CoordinateSpace);
-                gfx_SetPixel(ScreenSpace.x, ScreenSpace.y);
-            }
-        }
+        Object->vertices[i].x += Vector.x;
+        Object->vertices[i].y += Vector.y;
+        Object->vertices[i].z += Vector.z;
+    }
+}
+void obj3Process(struct obj3 * Object, struct cam Cam)
+{
+    gfx_SetColor(255);
+    struct vec2 Points;
+    for (int i = 0; i < Object->vertices_number; i++)
+    {
+        Points = coordinateSpace(Object->vertices[i], Cam.fov);
+        Points = screenSpace(Points);
+        gfx_SetPixel(Points.x, Points.y);
     }
 }
 
 
+int GenerateCube(int Size, int Density, struct obj3 * Cube)
+{
+    int VerticesNumbers =  Density*Density*Density;
+    if (VerticesNumbers > MAX_VERTICES_NUMBER){
+        return -1;
+    }
+    Cube->vertices_number = VerticesNumbers;
+    for (int i = 0 ; i < VerticesNumbers; i++)
+    {
+        Cube->vertices[i].x = (i%Density)*Size;
+        Cube->vertices[i].y = (i/Density)*Size;
+        Cube->vertices[i].z = (i%(Density*Density)*Size);
+    }
+}
+
 int main(void)
 {
-    //resolution = 320*240
-
     os_ClrHome();
     gfx_Begin();
     gfx_SetDrawBuffer();
-    gfx_SetColor(255);
-    int Fov = 7;
-    struct vec3 Origine = {0, 0, 0};
-    struct vec3 Point = {10, 6, 9};
 
-    struct vec2 Origine2D;
-    struct vec2 Point2D;
-    struct vec3 Move = {1, 0, 0};
+    //Camera
+    struct cam Camera = {7,0, 0, 0,GFX_LCD_WIDTH,GFX_LCD_HEIGHT};
+
+    //3D Object(s)
+    struct obj3 Cube;
 
     do
     {
-        gfx_SetColor(255);
-        drawCube(Fov, Move);
-
-        Origine2D = coordinateSpace(Origine, Fov);
-        Origine2D = screenSpace(Origine2D);
-        Point2D = coordinateSpace(Point, Fov);
-        Point2D = screenSpace(Point2D);
-        gfx_SetPixel(Point2D.x, Point2D.y);
-        gfx_SetPixel(Origine2D.x, Origine2D.y);
 
         gfx_SetColor(0);
         gfx_SwapDraw();
