@@ -83,6 +83,7 @@ int GenerateCube(int Size, int Density, struct obj3 * Cube)
         Cube->vertices[i].y = (i/Density)*Size;
         Cube->vertices[i].z = (i%(Density*Density)*Size);
     }
+    return 0;
 }
 
 int main(void)
@@ -92,10 +93,11 @@ int main(void)
     gfx_SetDrawBuffer();
 
     //Camera
-    struct cam Camera = {7,0, 0, 0,GFX_LCD_WIDTH,GFX_LCD_HEIGHT};
+    struct cam Camera = {7,{0, 0, 0},{GFX_LCD_WIDTH,GFX_LCD_HEIGHT}};
 
     //3D Object(s)
     struct obj3 Cube;
+    GenerateCube(4, 3, &Cube);
 
     do
     {
