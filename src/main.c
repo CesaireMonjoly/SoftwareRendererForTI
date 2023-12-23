@@ -12,14 +12,14 @@
 
 struct vec3
 {
-    int24_t x;
-    int24_t y;
-    int24_t z;
+    int x;
+    int y;
+    int z;
 };
 struct vec2
 {
-    int24_t x;
-    int24_t y;
+    int x;
+    int y;
 };
 struct obj3
 {
@@ -31,7 +31,6 @@ struct cam
 {
     int fov;
     struct vec3 pos;
-    struct vec2 aspect_ratio;
 };
 
 struct vec2 screenSpace(struct vec2 CoordinateSpace)
@@ -80,8 +79,8 @@ int GenerateCube(int Size, int Density, struct obj3 * Cube)
     for (int i = 0 ; i < VerticesNumbers; i++)
     {
         Cube->vertices[i].x = (i%Density)*Size;
-        Cube->vertices[i].y = (i/Density)*Size;
-        Cube->vertices[i].z = (i%(Density*Density)*Size);
+        Cube->vertices[i].y = ((i/Density)%Density)*Size;
+        Cube->vertices[i].z = (i/(Density*Density)*Size);
     }
     return 0;
 }
@@ -93,15 +92,19 @@ int main(void)
     gfx_SetDrawBuffer();
 
     //Camera
-    struct cam Camera = {7,{0, 0, 0},{GFX_LCD_WIDTH,GFX_LCD_HEIGHT}};
+    struct cam Camera = {5,{0, 0, 0}};
 
     //3D Object(s)
     struct obj3 Cube;
-    GenerateCube(4, 3, &Cube);
+    GenerateCube(8, 4, &Cube);
+
+    //Movement Vector
+    struct vec3 MovementVector = {-1, 0, 0};
 
     do
     {
-
+        obj3Move(&Cube, MovementVector);
+        obj3Process(&Cube, Camera);
         gfx_SetColor(0);
         gfx_SwapDraw();
         gfx_ZeroScreen();
