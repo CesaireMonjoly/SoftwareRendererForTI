@@ -8,7 +8,8 @@
 
 // GFX_LCD_WIDTH 320
 // GFX_LCD_HEIGHT 240
-#define MAX_VERTICES_NUMBER 255
+#define MAX_VERTICES 64
+#define MAX_TRIANGLES (MAX_VERTICES * 2)
 
 struct vec3
 {
@@ -24,7 +25,9 @@ struct vec2
 struct obj3
 {
     int vertices_number;
-    struct vec3 vertices[MAX_VERTICES_NUMBER];
+    struct vec3 vertices[MAX_VERTICES];
+    int triangle_number;
+    struct vec3 triangles[MAX_TRIANGLES]; // ve3 {x, y, z} with x, y and z the index of vertices that can form a triangle
     struct vec3 pos;
 };
 struct cam
@@ -33,17 +36,19 @@ struct cam
     struct vec3 pos;
 };
 
-struct vec2 screenSpace(struct vec2 CoordinateSpace)
+struct vec2 screenSpace(struct vec3 CoordinateSpace)
 {
-    CoordinateSpace.x = CoordinateSpace.x + 160;
-    CoordinateSpace.y = (CoordinateSpace.y*(-1) + 120);
-    return CoordinateSpace;
+    struct vec2 ScreenSpace;
+    ScreenSpace.x = CoordinateSpace.x + 160;
+    ScreenSpace.y = (CoordinateSpace.y*(-1) + 120);
+    return ScreenSpace;
 }
-struct vec2 coordinateSpace(struct vec3 CamSpace, int Dist)
+struct vec3 coordinateSpace(struct vec3 CamSpace, int Dist)
 {
-    struct vec2 CoordinateSpace;
+    struct vec3 CoordinateSpace;
     CoordinateSpace.x = (int) CamSpace.x*((CamSpace.z + Dist)/(Dist));
     CoordinateSpace.y = (int) CamSpace.y*((CamSpace.z + Dist)/(Dist));
+    CoordinateSpace.z = CamSpace.z;
     return CoordinateSpace;
 }
 
@@ -58,22 +63,20 @@ void obj3Move(struct obj3 *Object, struct vec3 Vector)
 void obj3Process(struct obj3 * Object, struct cam Cam)
 {
     gfx_SetColor(255);
-    struct vec2 Points;
+    struct vec3 Points;
+    struct vec2 ScreenPoints;
     for (int i = 0; i < Object->vertices_number; i++) {
-        if ((Object->vertices[i].y < Cam.pos.y) &&
-            (Object->vertices[i].z < Cam.pos.z))
-        {
             Points = coordinateSpace(Object->vertices[i], Cam.fov);
-            Points = screenSpace(Points);
-            gfx_SetPixel(Points.x, Points.y);
+            ScreenPoints = screenSpace(Points);
+            gfx_SetPixel(ScreenPoints.x, ScreenPoints.y);
         }
-    }
 }
+
 
 int GenerateCube(int Size, int Density, struct obj3 * Cube)
 {
     int VerticesNumbers =  Density*Density*Density;
-    if (VerticesNumbers > MAX_VERTICES_NUMBER){
+    if (VerticesNumbers > MAX_VERTICES){
         return -1;
     }
     Cube->vertices_number = VerticesNumbers;
@@ -83,6 +86,22 @@ int GenerateCube(int Size, int Density, struct obj3 * Cube)
         Cube->vertices[i].y = ((i/Density)%Density)*Size + Cube->pos.y;
         Cube->vertices[i].z = (i/(Density*Density)*Size) + Cube->pos.z;
         Cube->vertices_number = i;
+    }
+    return 0;
+}
+
+int GenerateCubeObject(int Size, struct obj3 * Cube)
+{
+    int VerticesNumbers = 8;
+    for (int i=0; i < VerticesNumbers; i++) {
+        Cube->vertices[i].x = (i & 0x1)*Size;
+        Cube->vertices[i].y = ((i & 0x2)/2)*Size;
+        Cube->vertices[i].z = ((i & 0x4)/4)*Size;
+
+        dbg_printf("\ni = %d\n", i);
+        dbg_printf("x = %d\n", Cube->vertices[i].x);
+        dbg_printf("y = %d\n", Cube->vertices[i].y);
+        dbg_printf("z = %d\n", Cube->vertices[i].z);
     }
     return 0;
 }
@@ -118,11 +137,11 @@ int main(void)
     gfx_SetDrawBuffer();
 
     //Camera
-    struct cam Camera = {10,{0, 20, 20}};
+    struct cam Camera = {10,{0, 0, -20}};
 
     //3D Object(s)
-    struct obj3 Cube = {0, {0}, {50, -10, 0}};
-    GenerateCube(14, 5, &Cube);
+    struct obj3 Cube = {0, {0}, 0, {0}, {50, 0, 0}};
+    GenerateCubeObject(8, &Cube);
 
     //Movement Vector
     struct vec3 MovementVector = {0, 0, 0};
