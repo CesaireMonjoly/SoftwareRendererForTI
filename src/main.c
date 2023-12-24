@@ -36,6 +36,20 @@ struct cam
     struct vec3 pos;
 };
 
+void debug_vec3(struct vec3 Obj, char Name[])
+{
+    dbg_printf("\n%s.x = %d\n", Name, Obj.x);
+    dbg_printf("%s.y = %d\n", Name, Obj.y);
+    dbg_printf("%s.z = %d\n", Name, Obj.z);
+}
+void debug_obj3_vertices(struct obj3 *Obj, char Name[])
+{
+    for (int i = 0; i < Obj->vertices_number; i++){
+        dbg_printf("\ni = %d", i);
+        debug_vec3(Obj->vertices[i], Name);
+    }
+}
+
 struct vec2 screenSpace(struct vec3 CoordinateSpace)
 {
     struct vec2 ScreenSpace;
@@ -98,15 +112,13 @@ int GenerateCubeObject(int Size, struct obj3 * Cube)
         Cube->vertices[i].y = ((i & 0x2)/2)*Size;
         Cube->vertices[i].z = ((i & 0x4)/4)*Size;
 
-        dbg_printf("\ni = %d\n", i);
-        dbg_printf("x = %d\n", Cube->vertices[i].x);
-        dbg_printf("y = %d\n", Cube->vertices[i].y);
-        dbg_printf("z = %d\n", Cube->vertices[i].z);
+        dbg_printf("\ni = %d", i);
+        debug_vec3(Cube->vertices[i], "     Cube");
     }
     return 0;
 }
 
-void inputMovement(struct vec3 *Movement)
+void InputMovement(struct vec3 *Movement)
 {
     Movement->x = 0;
     Movement->y = 0;
@@ -130,6 +142,10 @@ void inputMovement(struct vec3 *Movement)
     }
 }
 
+
+
+
+
 int main(void)
 {
     os_ClrHome();
@@ -140,14 +156,14 @@ int main(void)
     struct cam Camera = {10,{0, 0, -20}};
 
     //3D Object(s)
-    struct obj3 Cube = {0, {0}, 0, {0}, {50, 0, 0}};
+    struct obj3 Cube = {0, {0}, 0, {0}, {0, 0, 0}};
     GenerateCubeObject(8, &Cube);
 
     //Movement Vector
     struct vec3 MovementVector = {0, 0, 0};
 
     do {
-        inputMovement(&MovementVector);
+        InputMovement(&MovementVector);
         obj3Move(&Cube, MovementVector);
         obj3Process(&Cube, Camera);
         gfx_SetColor(0);
