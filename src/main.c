@@ -28,6 +28,7 @@ struct obj3
     struct vec3 vertices[MAX_VERTICES];
     int triangle_number;
     struct vec3 triangles[MAX_TRIANGLES]; // ve3 {x, y, z} with x, y and z the index of vertices that can form a triangle
+    struct vec2 screen_points[MAX_VERTICES];
     struct vec3 pos;
 };
 struct cam
@@ -44,6 +45,7 @@ void debug_vec3(struct vec3 Obj, char Name[])
 }
 void debug_obj3_vertices(struct obj3 *Obj, char Name[])
 {
+    dbg_printf("vertices numbers = %d", Obj->vertices_number);
     for (int i = 0; i < Obj->vertices_number; i++){
         dbg_printf("\ni = %d", i);
         debug_vec3(Obj->vertices[i], Name);
@@ -77,13 +79,33 @@ void obj3Move(struct obj3 *Object, struct vec3 Vector)
 void obj3Process(struct obj3 * Object, struct cam Cam)
 {
     gfx_SetColor(255);
-    struct vec3 Points;
-    struct vec2 ScreenPoints;
+    struct vec3 Points[3];
+    struct vec2 ScreenPoints[3];
+
+    /*
+    struct vec3 Points_;
+    struct vec2 ScreenPoints_;
     for (int i = 0; i < Object->vertices_number; i++) {
-            Points = coordinateSpace(Object->vertices[i], Cam.fov);
-            ScreenPoints = screenSpace(Points);
-            gfx_SetPixel(ScreenPoints.x, ScreenPoints.y);
-        }
+            Points_ = coordinateSpace(Object->vertices[i], Cam.fov);
+            ScreenPoints_ = screenSpace(Points_);
+            gfx_SetPixel(ScreenPoints_.x, ScreenPoints_.y);
+    }
+    */
+
+    //DES TRIANGLES!!!!
+    for (int k = 0; k < Object->triangle_number; k++){
+        Points[0] = coordinateSpace(Object->vertices[Object->triangles[k].x], Cam.fov);
+        Points[1] = coordinateSpace(Object->vertices[Object->triangles[k].y], Cam.fov);
+        Points[2] = coordinateSpace(Object->vertices[Object->triangles[k].z], Cam.fov);
+
+        ScreenPoints[0] = screenSpace(Points[0]);
+        ScreenPoints[1] = screenSpace(Points[1]);
+        ScreenPoints[2] = screenSpace(Points[2]);
+
+        gfx_Line(ScreenPoints[0].x, ScreenPoints[0].y, ScreenPoints[1].x, ScreenPoints[1].y);
+        gfx_Line(ScreenPoints[1].x, ScreenPoints[1].y, ScreenPoints[2].x, ScreenPoints[2].y);
+        gfx_Line(ScreenPoints[2].x, ScreenPoints[2].y, ScreenPoints[0].x, ScreenPoints[0].y);
+    }
 }
 
 
@@ -111,10 +133,12 @@ int GenerateCubeObject(int Size, struct obj3 * Cube)
         Cube->vertices[i].x = (i & 0x1)*Size;
         Cube->vertices[i].y = ((i & 0x2)/2)*Size;
         Cube->vertices[i].z = ((i & 0x4)/4)*Size;
-
-        dbg_printf("\ni = %d", i);
-        debug_vec3(Cube->vertices[i], "     Cube");
     }
+    Cube->triangles[0].x = 0;
+    Cube->triangles[0].y = 1;
+    Cube->triangles[0].z = 2;
+    Cube->triangle_number = 1;
+    Cube->vertices_number = VerticesNumbers;
     return 0;
 }
 
@@ -144,8 +168,6 @@ void InputMovement(struct vec3 *Movement)
 
 
 
-
-
 int main(void)
 {
     os_ClrHome();
@@ -156,8 +178,9 @@ int main(void)
     struct cam Camera = {10,{0, 0, -20}};
 
     //3D Object(s)
-    struct obj3 Cube = {0, {0}, 0, {0}, {0, 0, 0}};
-    GenerateCubeObject(8, &Cube);
+    struct obj3 Cube = {0, {0}, 0, {0}, {0},{0, 0, 0}};
+    GenerateCubeObject(16, &Cube);
+    //debug_obj3_vertices(&Cube, "    Cube");
 
     //Movement Vector
     struct vec3 MovementVector = {0, 0, 0};
