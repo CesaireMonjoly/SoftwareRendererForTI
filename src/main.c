@@ -149,17 +149,11 @@ void InputMovement(struct vec3 *Movement)
 
     if (kb_Power & kb_Data[6]){
         Movement->z = 1;
-        dbg_printf("pow\n");
     }
     else if (kb_Div & kb_Data[6]){
         Movement->z = -1;
-        dbg_printf("div\n");
     }
-    else {
-        Movement->z = 0;
-    }
-
-    if (kb_Right & kb_Data[7]) {
+    else if (kb_Right & kb_Data[7]) {
         Movement->x = 1;
     }
     else if (kb_Left & kb_Data[7]) {
@@ -174,6 +168,7 @@ void InputMovement(struct vec3 *Movement)
     else {
         Movement->x = 0;
         Movement->y = 0;
+        Movement->z = 0;
     }
 }
 
