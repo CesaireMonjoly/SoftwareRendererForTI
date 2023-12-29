@@ -28,7 +28,6 @@ struct obj3
     struct vec3 vertices[MAX_VERTICES];
     int triangle_number;
     struct vec3 triangles[MAX_TRIANGLES]; // ve3 {x, y, z} with x, y and z the index of vertices that can form a triangle
-    struct vec2 screen_points[MAX_VERTICES];
     struct vec3 pos;
 };
 struct cam
@@ -82,17 +81,6 @@ void obj3Process(struct obj3 * Object, struct cam Cam)
     struct vec3 Points[3];
     struct vec2 ScreenPoints[3];
 
-    /*
-    struct vec3 Points_;
-    struct vec2 ScreenPoints_;
-    for (int i = 0; i < Object->vertices_number; i++) {
-            Points_ = coordinateSpace(Object->vertices[i], Cam.fov);
-            ScreenPoints_ = screenSpace(Points_);
-            gfx_SetPixel(ScreenPoints_.x, ScreenPoints_.y);
-    }
-    */
-
-    //DES TRIANGLES!!!!
     for (int k = 0; k < Object->triangle_number; k++){
         Points[0] = coordinateSpace(Object->vertices[Object->triangles[k].x], Cam.fov);
         Points[1] = coordinateSpace(Object->vertices[Object->triangles[k].y], Cam.fov);
@@ -109,23 +97,6 @@ void obj3Process(struct obj3 * Object, struct cam Cam)
 }
 
 
-int GenerateCube(int Size, int Density, struct obj3 * Cube)
-{
-    int VerticesNumbers =  Density*Density*Density;
-    if (VerticesNumbers > MAX_VERTICES){
-        return -1;
-    }
-    Cube->vertices_number = VerticesNumbers;
-    for (int i = 0 ; i <= VerticesNumbers; i++)
-    {
-        Cube->vertices[i].x = (i%Density)*Size + Cube->pos.x;
-        Cube->vertices[i].y = ((i/Density)%Density)*Size + Cube->pos.y;
-        Cube->vertices[i].z = (i/(Density*Density)*Size) + Cube->pos.z;
-        Cube->vertices_number = i;
-    }
-    return 0;
-}
-
 int GenerateCubeObject(int Size, struct obj3 * Cube)
 {
     int VerticesNumbers = 8;
@@ -134,10 +105,38 @@ int GenerateCubeObject(int Size, struct obj3 * Cube)
         Cube->vertices[i].y = ((i & 0x2)/2)*Size;
         Cube->vertices[i].z = ((i & 0x4)/4)*Size;
     }
+
+    //Face 0
     Cube->triangles[0].x = 0;
     Cube->triangles[0].y = 1;
-    Cube->triangles[0].z = 2;
-    Cube->triangle_number = 1;
+    Cube->triangles[0].z = 3;
+
+    //Face 1
+    Cube->triangles[1].x = 4;
+    Cube->triangles[1].y = 6;
+    Cube->triangles[1].z = 7;
+
+    //Face 2
+    Cube->triangles[2].x = 0;
+    Cube->triangles[2].y = 2;
+    Cube->triangles[2].z = 6;
+
+    //Face 3
+    Cube->triangles[3].x = 1;
+    Cube->triangles[3].y = 5;
+    Cube->triangles[3].z = 7;
+
+    //Face 4
+    Cube->triangles[4].x = 0;
+    Cube->triangles[4].y = 4;
+    Cube->triangles[4].z = 5;
+
+    //Face 5
+    Cube->triangles[5].x = 2;
+    Cube->triangles[5].y = 3;
+    Cube->triangles[5].z = 7;
+
+    Cube->triangle_number = 6;
     Cube->vertices_number = VerticesNumbers;
     return 0;
 }
@@ -147,26 +146,36 @@ void InputMovement(struct vec3 *Movement)
     Movement->x = 0;
     Movement->y = 0;
     Movement->z = 0;
-    if (kb_Right == kb_Data[7]) {
-        Movement->x = 2;
-    }
-    else if (kb_Left == kb_Data[7]) {
-        Movement->x = -2;
-    }
-    else if (kb_Up == kb_Data[7]){
+
+    if (kb_Power & kb_Data[6]){
         Movement->z = 1;
+        dbg_printf("pow\n");
     }
-    else if (kb_Down == kb_Data[7]){
+    else if (kb_Div & kb_Data[6]){
         Movement->z = -1;
+        dbg_printf("div\n");
+    }
+    else {
+        Movement->z = 0;
+    }
+
+    if (kb_Right & kb_Data[7]) {
+        Movement->x = 1;
+    }
+    else if (kb_Left & kb_Data[7]) {
+        Movement->x = -1;
+    }
+    else if (kb_Up & kb_Data[7]){
+        Movement->y = 1;
+    }
+    else if (kb_Down & kb_Data[7]){
+        Movement->y = -1;
     }
     else {
         Movement->x = 0;
         Movement->y = 0;
-        Movement->z = 0;
     }
 }
-
-
 
 int main(void)
 {
@@ -178,12 +187,14 @@ int main(void)
     struct cam Camera = {10,{0, 0, -20}};
 
     //3D Object(s)
-    struct obj3 Cube = {0, {0}, 0, {0}, {0},{0, 0, 0}};
+    struct obj3 Cube = {0, {0}, 0, {0},{0, 0, 0}};
     GenerateCubeObject(16, &Cube);
     //debug_obj3_vertices(&Cube, "    Cube");
 
     //Movement Vector
-    struct vec3 MovementVector = {0, 0, 0};
+    struct vec3 MovementVector = {0, 0, 20};
+    obj3Move(&Cube, MovementVector);
+    MovementVector.z = 0;
 
     do {
         InputMovement(&MovementVector);
@@ -192,7 +203,7 @@ int main(void)
         gfx_SetColor(0);
         gfx_SwapDraw();
         gfx_ZeroScreen();
-    } while (kb_Data[1] != kb_2nd); //exit key
+    } while (kb_Data[1] != kb_Clear); //exit key
 
     gfx_ZeroScreen();
     os_ClrHome();
