@@ -1,6 +1,6 @@
 ### 3D graphics for TI calculator 
 
-A basic rasterization program that (will..) let you display a 3D cude :p
+A basic software renderer that let you display a 3D cude :p
 
 ### Compile 
 
