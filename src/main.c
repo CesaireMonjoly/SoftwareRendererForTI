@@ -146,7 +146,7 @@ void InputMovement(struct vec3 *Movement)
     Movement->x = 0;
     Movement->y = 0;
     Movement->z = 0;
-
+    kb_Scan();
     if (kb_Power & kb_Data[6]){
         Movement->z = 1;
     }
