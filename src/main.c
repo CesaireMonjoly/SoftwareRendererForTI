@@ -25,9 +25,9 @@ struct vec2
 struct obj3
 {
     int vertices_number;
-    struct vec3 vertices[MAX_VERTICES];
+    struct vec3 vertices[MAX_VERTICES]; // oj3->vertices[0] refer to the "center"/"position" of the object but the others vertices are not related to it
     int triangle_number;
-    struct vec3 triangles[MAX_TRIANGLES]; // ve3 {x, y, z} with x, y and z the index of vertices that can form a triangle
+    struct vec3 triangles[MAX_TRIANGLES]; // ve3 {x, y, z} with x, y and z (all different from 0) the index of vertices that can form a triangle
     struct vec3 pos;
 };
 struct cam
@@ -99,42 +99,45 @@ void obj3Process(struct obj3 * Object, struct cam Cam)
 
 int GenerateCubeObject(int Size, struct obj3 * Cube)
 {
-    int VerticesNumbers = 8;
+    int VerticesNumbers = 9;
+    Cube->vertices[0].x = 0;
+    Cube->vertices[0].y = 0;
+    Cube->vertices[0].z = 0;
     for (int i=0; i < VerticesNumbers; i++) {
-        Cube->vertices[i].x = (i & 0x1)*Size;
-        Cube->vertices[i].y = ((i & 0x2)/2)*Size;
-        Cube->vertices[i].z = ((i & 0x4)/4)*Size;
+        Cube->vertices[i+1].x = (i & 0x1)*Size;
+        Cube->vertices[i+1].y = ((i & 0x2)/2)*Size;
+        Cube->vertices[i+1].z = ((i & 0x4)/4)*Size;
     }
 
     //Face 0
-    Cube->triangles[0].x = 0;
-    Cube->triangles[0].y = 1;
-    Cube->triangles[0].z = 3;
+    Cube->triangles[0].x = 1;
+    Cube->triangles[0].y = 2;
+    Cube->triangles[0].z = 4;
 
     //Face 1
-    Cube->triangles[1].x = 4;
-    Cube->triangles[1].y = 6;
-    Cube->triangles[1].z = 7;
+    Cube->triangles[1].x = 5;
+    Cube->triangles[1].y = 7;
+    Cube->triangles[1].z = 8;
 
     //Face 2
-    Cube->triangles[2].x = 0;
-    Cube->triangles[2].y = 2;
-    Cube->triangles[2].z = 6;
+    Cube->triangles[2].x = 1;
+    Cube->triangles[2].y = 3;
+    Cube->triangles[2].z = 7;
 
     //Face 3
-    Cube->triangles[3].x = 1;
-    Cube->triangles[3].y = 5;
-    Cube->triangles[3].z = 7;
+    Cube->triangles[3].x = 2;
+    Cube->triangles[3].y = 6;
+    Cube->triangles[3].z = 8;
 
     //Face 4
-    Cube->triangles[4].x = 0;
-    Cube->triangles[4].y = 4;
-    Cube->triangles[4].z = 5;
+    Cube->triangles[4].x = 1;
+    Cube->triangles[4].y = 5;
+    Cube->triangles[4].z = 6;
 
     //Face 5
-    Cube->triangles[5].x = 2;
-    Cube->triangles[5].y = 3;
-    Cube->triangles[5].z = 7;
+    Cube->triangles[5].x = 3;
+    Cube->triangles[5].y = 4;
+    Cube->triangles[5].z = 8;
 
     Cube->triangle_number = 6;
     Cube->vertices_number = VerticesNumbers;
