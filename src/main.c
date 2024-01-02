@@ -156,22 +156,21 @@ void InputMovement(struct vec3 *Movement)
     else if (kb_Div & kb_Data[6]){
         Movement->z = -1;
     }
-    else if (kb_Right & kb_Data[7]) {
-        Movement->x = 1;
-    }
-    else if (kb_Left & kb_Data[7]) {
-        Movement->x = -1;
-    }
-    else if (kb_Up & kb_Data[7]){
-        Movement->y = 1;
-    }
-    else if (kb_Down & kb_Data[7]){
-        Movement->y = -1;
-    }
-    else {
-        Movement->x = 0;
-        Movement->y = 0;
-        Movement->z = 0;
+
+    switch (kb_Data[7])
+    {
+        case kb_Right :
+            Movement->x = 1;
+            break;
+        case kb_Left:
+            Movement->x = -1;
+            break;
+        case kb_Down:
+            Movement->y = -1;
+            break;
+        case kb_Up:
+            Movement->y = 1;
+            break;
     }
 }
 
