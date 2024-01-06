@@ -8,8 +8,17 @@
 
 // GFX_LCD_WIDTH 320
 // GFX_LCD_HEIGHT 240
+
+#define ASPECT_RATIO 1.333333
 #define MAX_VERTICES 64
 #define MAX_TRIANGLES (MAX_VERTICES * 2)
+
+struct vec3f
+{
+    float x;
+    float y;
+    float z;
+};
 
 struct vec3
 {
@@ -32,7 +41,10 @@ struct obj3
 };
 struct cam
 {
-    int fov;
+    float fov;
+    float aspectRatio;
+    int zNear;
+    int zFar;
     struct vec3 pos;
 };
 
@@ -41,6 +53,12 @@ void debug_vec3(struct vec3 Obj, char Name[])
     dbg_printf("\n%s.x = %d\n", Name, Obj.x);
     dbg_printf("%s.y = %d\n", Name, Obj.y);
     dbg_printf("%s.z = %d\n", Name, Obj.z);
+}
+void debug_vec3f(struct vec3f Obj, char Name[])
+{
+    dbg_printf("\n%s.x = %f\n", Name, Obj.x);
+    dbg_printf("%s.y = %f\n", Name, Obj.y);
+    dbg_printf("%s.z = %f\n", Name, Obj.z);
 }
 void debug_obj3_vertices(struct obj3 *Obj, char Name[])
 {
@@ -51,6 +69,19 @@ void debug_obj3_vertices(struct obj3 *Obj, char Name[])
     }
 }
 
+void buildMatrixProjection(float Fov, float AspectRatio, int ZNear, int ZFar, struct vec3f* TransformationFactors)
+{
+
+    dbg_printf("Fov : %f\n", Fov);
+    dbg_printf("AspectRatio  : %f\n", AspectRatio);
+
+    TransformationFactors->x = 0.1;//(1/tan(Fov/2));//* AspectRatio;
+    TransformationFactors->y  = 0.1;//(int) 1/ tan(Fov/2);
+    TransformationFactors->z = (int) ZFar/(ZFar - ZNear) - (-ZFar * ZNear)/(ZFar-ZNear);
+
+    debug_vec3f(*TransformationFactors, "     TransformationFactors");
+}
+
 struct vec2 screenSpace(struct vec3 CoordinateSpace)
 {
     struct vec2 ScreenSpace;
@@ -58,11 +89,17 @@ struct vec2 screenSpace(struct vec3 CoordinateSpace)
     ScreenSpace.y = (CoordinateSpace.y*(-1) + 120);
     return ScreenSpace;
 }
-struct vec3 coordinateSpace(struct vec3 CamSpace, int Dist)
+struct vec3 coordinateSpace(struct vec3 CamSpace, struct vec3f TransformationFactors)
 {
+    CamSpace.x = (int) CamSpace.x*TransformationFactors.x;
+    CamSpace.y = (int) CamSpace.y*TransformationFactors.y;
+    CamSpace.z = (int) CamSpace.z*TransformationFactors.z;
+
+    //debug_vec3(CamSpace, "  Camera");
+
     struct vec3 CoordinateSpace;
-    CoordinateSpace.x = (int) CamSpace.x*((CamSpace.z + Dist)/(Dist));
-    CoordinateSpace.y = (int) CamSpace.y*((CamSpace.z + Dist)/(Dist));
+    CoordinateSpace.x = (int) CamSpace.x*CamSpace.z;
+    CoordinateSpace.y = (int) CamSpace.y*CamSpace.z;
     CoordinateSpace.z = CamSpace.z;
     return CoordinateSpace;
 }
@@ -75,16 +112,16 @@ void obj3Move(struct obj3 *Object, struct vec3 Vector)
         Object->vertices[i].z += Vector.z;
     }
 }
-void obj3Process(struct obj3 * Object, struct cam Cam)
+void obj3Process(struct obj3 *Object, struct vec3f TransformationFactors)
 {
     gfx_SetColor(255);
     struct vec3 Points[3];
     struct vec2 ScreenPoints[3];
 
     for (int k = 0; k < Object->triangle_number; k++){
-        Points[0] = coordinateSpace(Object->vertices[Object->triangles[k].x], Cam.fov);
-        Points[1] = coordinateSpace(Object->vertices[Object->triangles[k].y], Cam.fov);
-        Points[2] = coordinateSpace(Object->vertices[Object->triangles[k].z], Cam.fov);
+        Points[0] = coordinateSpace(Object->vertices[Object->triangles[k].x], TransformationFactors);
+        Points[1] = coordinateSpace(Object->vertices[Object->triangles[k].y], TransformationFactors);
+        Points[2] = coordinateSpace(Object->vertices[Object->triangles[k].z], TransformationFactors);
 
         ScreenPoints[0] = screenSpace(Points[0]);
         ScreenPoints[1] = screenSpace(Points[1]);
@@ -97,7 +134,7 @@ void obj3Process(struct obj3 * Object, struct cam Cam)
 }
 
 
-int GenerateCubeObject(int Size, struct obj3 * Cube)
+int GenerateCubeObject(int Size, struct obj3 *Cube)
 {
     int VerticesNumbers = 9;
     Cube->vertices[0].x = 0;
@@ -181,11 +218,14 @@ int main(void)
     gfx_SetDrawBuffer();
 
     //Camera
-    struct cam Camera = {10,{0, 0, -20}};
+    struct cam Camera = {90, ASPECT_RATIO, 3, 50,{0, 0, -20}};
+
+    struct vec3f TransformationFactors = {0}; //to lazy to do matrix multiplication...
+    buildMatrixProjection(Camera.fov, Camera.aspectRatio, Camera.zNear, Camera.zFar, &TransformationFactors);
 
     //3D Object(s)
     struct obj3 Cube = {0, {0}, 0, {0},{0, 0, 0}};
-    GenerateCubeObject(16, &Cube);
+    GenerateCubeObject(2, &Cube);
     //debug_obj3_vertices(&Cube, "    Cube");
 
     //Movement Vector
@@ -196,7 +236,7 @@ int main(void)
     do {
         InputMovement(&MovementVector);
         obj3Move(&Cube, MovementVector);
-        obj3Process(&Cube, Camera);
+        obj3Process(&Cube, TransformationFactors);
         gfx_SetColor(0);
         gfx_SwapDraw();
         gfx_ZeroScreen();
