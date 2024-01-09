@@ -11,8 +11,8 @@ void buildMatrixProjection(float Fov, float AspectRatio, int ZNear, int ZFar, st
     dbg_printf("Fov : %f\n", Fov);
     dbg_printf("AspectRatio  : %f\n", AspectRatio);
 
-    TransformationFactors->x = 0.1;//(1/tan(Fov/2));//* AspectRatio;
-    TransformationFactors->y  = 0.1;//(int) 1/ tan(Fov/2);
+    TransformationFactors->x = 1.0;//(1/tan(Fov/2));//* AspectRatio;
+    TransformationFactors->y  = 1.0;//(int) 1/ tan(Fov/2);
     TransformationFactors->z = (int) ZFar/(ZFar - ZNear) - (-ZFar * ZNear)/(ZFar-ZNear);
 
     debug_vec3f(*TransformationFactors, "     TransformationFactors");
