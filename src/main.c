@@ -11,8 +11,8 @@ void buildMatrixProjection(float Fov, float AspectRatio, int ZNear, int ZFar, st
     dbg_printf("Fov : %f\n", Fov);
     dbg_printf("AspectRatio  : %f\n", AspectRatio);
 
-    TransformationFactors->x = 1.0;//(1/tan(Fov/2));//* AspectRatio;
-    TransformationFactors->y  = 1.0;//(int) 1/ tan(Fov/2);
+    TransformationFactors->x = 1; //(1/tan(Fov/2)) * AspectRatio;
+    TransformationFactors->y = 1; //(1/tan(Fov/2));
     TransformationFactors->z = (int) ZFar/(ZFar - ZNear) - (-ZFar * ZNear)/(ZFar-ZNear);
 
     //debug_vec3(*TransformationFactors, "     TransformationFactors");
@@ -40,6 +40,16 @@ struct vec3 coordinateSpace(struct vec3 CamSpace, struct vec3 TransformationFact
     return CoordinateSpace;
 }
 
+int sinus(int angle, int lenght)
+{
+    return ((SIN_LUT[angle]*lenght)>>8)+1;
+}
+
+int cosine(int angle, int lenght)
+{
+    return ((SIN_LUT[90-angle]*lenght)>>8)+1;
+}
+
 void obj3Move(struct obj3 *Object, struct vec3 Vector)
 {
     for (int i = 0; i < Object->vertices_number; i++) {
@@ -48,7 +58,7 @@ void obj3Move(struct obj3 *Object, struct vec3 Vector)
         Object->vertices[i].z += Vector.z;
     }
 }
-void obj3Process(struct obj3 *Object, struct vec3f TransformationFactors)
+
 void obj3Process(struct obj3 *Object, struct vec3 TransformationFactors)
 {
     gfx_SetColor(255);
@@ -69,7 +79,6 @@ void obj3Process(struct obj3 *Object, struct vec3 TransformationFactors)
         gfx_Line(ScreenPoints[2].x, ScreenPoints[2].y, ScreenPoints[0].x, ScreenPoints[0].y);
     }
 }
-
 
 int GenerateCubeObject(int Size, struct obj3 *Cube)
 {
@@ -148,6 +157,7 @@ void InputMovement(struct vec3 *Movement)
     }
 }
 
+
 int main(void)
 {
     os_ClrHome();
@@ -170,10 +180,26 @@ int main(void)
     obj3Move(&Cube, MovementVector);
     MovementVector.z = 0;
 
+    struct vec3 point = {30, 32, 0};
+
+    for (int i = 0; i < 90; i++) {
+        //int x = cosine(i, 100);
+        int x = sinus(i, 100);
+        dbg_printf("cos(%d) = %d\n", i, x);
+    }
+
     do {
+        /*
+        debug_vec3(point, "point ");
+        point.x = ((point.x * cosine(0))>>8)+1;
+        point.y = ((point.y * sinus(0))>>8)+1;
+        gfx_SetPixel(point.x, point.y);
+        */
+        /*
         InputMovement(&MovementVector);
         obj3Move(&Cube, MovementVector);
         obj3Process(&Cube, TransformationFactors);
+        */
         gfx_SetColor(0);
         gfx_SwapDraw();
         gfx_ZeroScreen();
