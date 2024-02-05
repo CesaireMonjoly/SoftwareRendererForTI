@@ -40,7 +40,7 @@ struct vec3 coordinateSpace(struct vec3 CamSpace, struct vec3 TransformationFact
     return CoordinateSpace;
 }
 
-int sinus(int angle, int lenght)
+int sine(int angle, int lenght)
 {
     return ((SIN_LUT[angle]*lenght)>>8)+1;
 }
@@ -184,7 +184,7 @@ int main(void)
 
     for (int i = 0; i < 90; i++) {
         //int x = cosine(i, 100);
-        int x = sinus(i, 100);
+        int x = sine(i, 100);
         dbg_printf("cos(%d) = %d\n", i, x);
     }
 

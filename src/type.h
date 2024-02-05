@@ -51,7 +51,7 @@ const uint8_t SIN_LUT[91] = {
         201,204,206,209,211,214,216,219,221,223,225,227,229,
         231,233,235,236,238,240,241,243,244,245,246,247,248,
         249,250,251,252,253,253,254,254,254,255,255,255,255 };
-//F*ck Taylor's Series, Look Up Table go brrr
+//F*ck Taylor's Series, Look Up Table go brrrr
 
 
 void debug_vec2(struct vec2 Obj, char Name[])
