@@ -5,7 +5,7 @@
 
 #include "type.h"
 
-void buildMatrixProjection(float Fov, float AspectRatio, int ZNear, int ZFar, struct vec3f* TransformationFactors)
+void buildMatrixProjection(float Fov, float AspectRatio, int ZNear, int ZFar, struct vec3* TransformationFactors)
 {
 
     dbg_printf("Fov : %f\n", Fov);
@@ -15,7 +15,7 @@ void buildMatrixProjection(float Fov, float AspectRatio, int ZNear, int ZFar, st
     TransformationFactors->y  = 1.0;//(int) 1/ tan(Fov/2);
     TransformationFactors->z = (int) ZFar/(ZFar - ZNear) - (-ZFar * ZNear)/(ZFar-ZNear);
 
-    debug_vec3f(*TransformationFactors, "     TransformationFactors");
+    //debug_vec3(*TransformationFactors, "     TransformationFactors");
 }
 
 struct vec2 screenSpace(struct vec3 CoordinateSpace)
@@ -25,11 +25,11 @@ struct vec2 screenSpace(struct vec3 CoordinateSpace)
     ScreenSpace.y = (CoordinateSpace.y*(-1) + 120);
     return ScreenSpace;
 }
-struct vec3 coordinateSpace(struct vec3 CamSpace, struct vec3f TransformationFactors)
+struct vec3 coordinateSpace(struct vec3 CamSpace, struct vec3 TransformationFactors)
 {
-    CamSpace.x = (int) CamSpace.x*TransformationFactors.x;
-    CamSpace.y = (int) CamSpace.y*TransformationFactors.y;
-    CamSpace.z = (int) CamSpace.z*TransformationFactors.z;
+    CamSpace.x = (CamSpace.x >> 2)*TransformationFactors.x;
+    CamSpace.y = (CamSpace.y >> 2)*TransformationFactors.y;
+    CamSpace.z = (CamSpace.z >> 2)*TransformationFactors.z;
 
     //debug_vec3(CamSpace, "  Camera");
 
@@ -49,6 +49,7 @@ void obj3Move(struct obj3 *Object, struct vec3 Vector)
     }
 }
 void obj3Process(struct obj3 *Object, struct vec3f TransformationFactors)
+void obj3Process(struct obj3 *Object, struct vec3 TransformationFactors)
 {
     gfx_SetColor(255);
     struct vec3 Points[3];
@@ -156,12 +157,12 @@ int main(void)
     //Camera
     struct cam Camera = {90, ASPECT_RATIO, 3, 50,{0, 0, -20}};
 
-    struct vec3f TransformationFactors = {0}; //to lazy to do matrix multiplication...
+    struct vec3 TransformationFactors = {0};
     buildMatrixProjection(Camera.fov, Camera.aspectRatio, Camera.zNear, Camera.zFar, &TransformationFactors);
 
     //3D Object(s)
     struct obj3 Cube = {0, {0}, 0, {0},{0, 0, 0}};
-    GenerateCubeObject(2, &Cube);
+    GenerateCubeObject(8, &Cube);
     //debug_obj3_vertices(&Cube, "    Cube");
 
     //Movement Vector
