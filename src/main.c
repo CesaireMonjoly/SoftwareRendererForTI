@@ -180,26 +180,10 @@ int main(void)
     obj3Move(&Cube, MovementVector);
     MovementVector.z = 0;
 
-    struct vec3 point = {30, 32, 0};
-
-    for (int i = 0; i < 90; i++) {
-        //int x = cosine(i, 100);
-        int x = sine(i, 100);
-        dbg_printf("cos(%d) = %d\n", i, x);
-    }
-
     do {
-        /*
-        debug_vec3(point, "point ");
-        point.x = ((point.x * cosine(0))>>8)+1;
-        point.y = ((point.y * sinus(0))>>8)+1;
-        gfx_SetPixel(point.x, point.y);
-        */
-        /*
         InputMovement(&MovementVector);
         obj3Move(&Cube, MovementVector);
         obj3Process(&Cube, TransformationFactors);
-        */
         gfx_SetColor(0);
         gfx_SwapDraw();
         gfx_ZeroScreen();
