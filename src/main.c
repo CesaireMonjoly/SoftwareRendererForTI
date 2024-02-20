@@ -5,17 +5,24 @@
 
 #include "type.h"
 
-void buildMatrixProjection(float Fov, float AspectRatio, int ZNear, int ZFar, struct vec3* TransformationFactors)
+void buildMatrixProjection(float Fov, float AspectRatio, int ZNear, int ZFar, struct mat4 *MatrixProjection)
 {
-
-    dbg_printf("Fov : %f\n", Fov);
-    dbg_printf("AspectRatio  : %f\n", AspectRatio);
-
-    TransformationFactors->x = 1; //(1/tan(Fov/2)) * AspectRatio;
-    TransformationFactors->y = 1; //(1/tan(Fov/2));
-    TransformationFactors->z = (int) ZFar/(ZFar - ZNear) - (-ZFar * ZNear)/(ZFar-ZNear);
+    MatrixProjection->m[0][0] = 1; //(1/tan(Fov/2)) * AspectRatio;
+    MatrixProjection->m[1][1] = 1; //(1/tan(Fov/2));
+    MatrixProjection->m[2][2] = (int) ZFar/(ZFar - ZNear) - (-ZFar * ZNear)/(ZFar-ZNear);
+    MatrixProjection->m[3][3] = 1;
 
     //debug_vec3(*TransformationFactors, "     TransformationFactors");
+}
+
+struct vec4 mat4MulVec4(struct mat4 Matrix, struct vec4 Vector)
+{
+    struct vec4 Output;
+    Output.x = Matrix.m[0][0] * Vector.x + Matrix.m[0][1] * Vector.y + Matrix.m[0][2] * Vector.z + Matrix.m[0][3] * Vector.w;
+    Output.y = Matrix.m[1][0] * Vector.x + Matrix.m[1][1] * Vector.y + Matrix.m[1][2] * Vector.z + Matrix.m[1][3] * Vector.w;
+    Output.z = Matrix.m[2][0] * Vector.x + Matrix.m[2][1] * Vector.y + Matrix.m[2][2] * Vector.z + Matrix.m[2][3] * Vector.w;
+    Output.w = Matrix.m[3][0] * Vector.x + Matrix.m[3][1] * Vector.y + Matrix.m[3][2] * Vector.z + Matrix.m[3][3] * Vector.w;
+    return Output;
 }
 
 struct vec2 screenSpace(struct vec3 CoordinateSpace)
@@ -25,13 +32,11 @@ struct vec2 screenSpace(struct vec3 CoordinateSpace)
     ScreenSpace.y = (CoordinateSpace.y*(-1) + 120);
     return ScreenSpace;
 }
-struct vec3 coordinateSpace(struct vec3 CamSpace, struct vec3 TransformationFactors)
+struct vec3 coordinateSpace(struct vec3 CamSpace, struct mat4 MatrixProjection)
 {
-    CamSpace.x = (CamSpace.x >> 2)*TransformationFactors.x;
-    CamSpace.y = (CamSpace.y >> 2)*TransformationFactors.y;
-    CamSpace.z = (CamSpace.z >> 2)*TransformationFactors.z;
-
-    //debug_vec3(CamSpace, "  Camera");
+    CamSpace.x = (CamSpace.x >> 2)*MatrixProjection.m[0][0];
+    CamSpace.y = (CamSpace.y >> 2)*MatrixProjection.m[1][1];
+    CamSpace.z = (CamSpace.z >> 2)*MatrixProjection.m[2][2];
 
     struct vec3 CoordinateSpace;
     CoordinateSpace.x = (int) CamSpace.x*CamSpace.z;
@@ -59,20 +64,24 @@ void obj3Move(struct obj3 *Object, struct vec3 Vector)
     }
 }
 
-void obj3Process(struct obj3 *Object, struct vec3 TransformationFactors)
+void obj3Process(struct obj3 *Object, struct mat4 MatrixProjection)
 {
     gfx_SetColor(255);
     struct vec3 Points[3];
     struct vec2 ScreenPoints[3];
 
+    struct vec4 CamSpace;
+
     for (int k = 0; k < Object->triangle_number; k++){
-        Points[0] = coordinateSpace(Object->vertices[Object->triangles[k].x], TransformationFactors);
-        Points[1] = coordinateSpace(Object->vertices[Object->triangles[k].y], TransformationFactors);
-        Points[2] = coordinateSpace(Object->vertices[Object->triangles[k].z], TransformationFactors);
+
+        Points[0] = coordinateSpace(Object->vertices[Object->triangles[k].x], MatrixProjection);
+        Points[1] = coordinateSpace(Object->vertices[Object->triangles[k].y], MatrixProjection);
+        Points[2] = coordinateSpace(Object->vertices[Object->triangles[k].z], MatrixProjection);
 
         ScreenPoints[0] = screenSpace(Points[0]);
         ScreenPoints[1] = screenSpace(Points[1]);
         ScreenPoints[2] = screenSpace(Points[2]);
+
 
         gfx_Line(ScreenPoints[0].x, ScreenPoints[0].y, ScreenPoints[1].x, ScreenPoints[1].y);
         gfx_Line(ScreenPoints[1].x, ScreenPoints[1].y, ScreenPoints[2].x, ScreenPoints[2].y);
@@ -140,21 +149,20 @@ void InputMovement(struct vec3 *Movement)
         Movement->z = -1;
     }
 
-    switch (kb_Data[7])
-    {
-        case kb_Right :
-            Movement->x = 1;
-            break;
-        case kb_Left:
-            Movement->x = -1;
-            break;
-        case kb_Down:
-            Movement->y = -1;
-            break;
-        case kb_Up:
-            Movement->y = 1;
-            break;
+    if (kb_Right & kb_Data[7]){
+        Movement->x = 1;
     }
+    else if (kb_Left & kb_Data[7]){
+        Movement->x = -1;
+    }
+
+    if (kb_Up & kb_Data[7]){
+        Movement->y = 1;
+    }
+    else if (kb_Down & kb_Data[7]){
+        Movement->y = -1;
+    }
+
 }
 
 
@@ -167,8 +175,8 @@ int main(void)
     //Camera
     struct cam Camera = {90, ASPECT_RATIO, 3, 50,{0, 0, -20}};
 
-    struct vec3 TransformationFactors = {0};
-    buildMatrixProjection(Camera.fov, Camera.aspectRatio, Camera.zNear, Camera.zFar, &TransformationFactors);
+    struct mat4 MatrixProjection= {0};
+    buildMatrixProjection(Camera.fov, Camera.aspectRatio, Camera.zNear, Camera.zFar, &MatrixProjection);
 
     //3D Object(s)
     struct obj3 Cube = {0, {0}, 0, {0},{0, 0, 0}};
@@ -183,7 +191,7 @@ int main(void)
     do {
         InputMovement(&MovementVector);
         obj3Move(&Cube, MovementVector);
-        obj3Process(&Cube, TransformationFactors);
+        obj3Process(&Cube, MatrixProjection);
         gfx_SetColor(0);
         gfx_SwapDraw();
         gfx_ZeroScreen();
