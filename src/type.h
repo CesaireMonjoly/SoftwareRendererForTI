@@ -103,7 +103,6 @@ const int16_t SIN_LUT[361] = {
         0xFFEE,0xFFF3,0xFFF7,0xFFFC };
 
 
-#ifdef debug
 void debug_vec2(struct vec2 Obj, char Name[])
 {
     dbg_printf("\n%s.x = %d\n", Name, Obj.x);
@@ -125,7 +124,17 @@ void debug_vec4(struct vec4 Obj, char Name[])
 
 }
 
-
+void debug_matrix4(struct mat4 Matrix, char Name[])
+{
+    dbg_printf("%s", Name);
+    for (int i = 0; i < 4; i++){
+        dbg_printf("\n    ");
+        for (int j = 0; j < 4; j++){
+            dbg_printf("[%d] ", Matrix.m[i][j]);
+        }
+    }
+    dbg_printf("\n");
+}
 void debug_obj3_vertices(struct obj3 *Obj, char Name[])
 {
     dbg_printf("vertices numbers = %d", Obj->vertices_number);
@@ -134,4 +143,3 @@ void debug_obj3_vertices(struct obj3 *Obj, char Name[])
         debug_vec3(Obj->vertices[i], Name);
     }
 }
-#endif

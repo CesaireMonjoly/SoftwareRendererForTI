@@ -2,17 +2,25 @@
 #include <keypadc.h>
 #include <graphx.h>
 #include <debug.h>
+#include <math.h>
 
 #include "type.h"
 
 void buildMatrixProjection(float Fov, float AspectRatio, int ZNear, int ZFar, struct mat4 *MatrixProjection)
 {
-    MatrixProjection->m[0][0] = 1; //(1/tan(Fov/2)) * AspectRatio;
-    MatrixProjection->m[1][1] = 1; //(1/tan(Fov/2));
-    MatrixProjection->m[2][2] = (int) ZFar/(ZFar - ZNear) - (-ZFar * ZNear)/(ZFar-ZNear);
-    MatrixProjection->m[3][3] = 1;
+    MatrixProjection->m[0][0] = 1;//((1/tan(Fov/2)) * AspectRatio)*255;
+    MatrixProjection->m[1][1] = 1;//((1/tan(Fov/2)))*255;
+    MatrixProjection->m[2][2] = (ZFar/(ZFar - ZNear) );//*255;
+    MatrixProjection->m[3][2] = (-ZFar * ZNear)/(ZFar-ZNear);//*255;
+    MatrixProjection->m[2][3] = 1;//255;
 
-    //debug_vec3(*TransformationFactors, "     TransformationFactors");
+    debug_matrix4(*MatrixProjection, "Porjection");
+    /*
+     * I'm currently trying to implement a bette matrix projection without using floats
+     * The idea is to multiply the whole matrix by 255,
+     * and when we multiply the matrix with the vec4 we will have to divide by 255 and round
+    */
+
 }
 
 struct vec4 mat4MulVec4(struct mat4 Matrix, struct vec4 Vector)
@@ -34,14 +42,23 @@ struct vec2 screenSpace(struct vec3 CoordinateSpace)
 }
 struct vec3 coordinateSpace(struct vec3 CamSpace, struct mat4 MatrixProjection)
 {
-    CamSpace.x = (CamSpace.x >> 2)*MatrixProjection.m[0][0];
-    CamSpace.y = (CamSpace.y >> 2)*MatrixProjection.m[1][1];
-    CamSpace.z = (CamSpace.z >> 2)*MatrixProjection.m[2][2];
+    struct vec4 CamSpace4;
+    CamSpace4.x = CamSpace.x;
+    CamSpace4.y = CamSpace.y;
+    CamSpace4.z = CamSpace.z;
+    CamSpace4.w = 1;
 
+    CamSpace4 = mat4MulVec4(MatrixProjection, CamSpace4);
+
+    /*
+    CamSpace4.x = (int)round(CamSpace4.x >> 8);
+    CamSpace4.y = (int)round(CamSpace4.y >> 8);
+    CamSpace4.z = (int)round(CamSpace4.z >> 8);
+    */
     struct vec3 CoordinateSpace;
-    CoordinateSpace.x = (int) CamSpace.x*CamSpace.z;
-    CoordinateSpace.y = (int) CamSpace.y*CamSpace.z;
-    CoordinateSpace.z = CamSpace.z;
+    CoordinateSpace.x = (int) CamSpace4.x*CamSpace4.z;
+    CoordinateSpace.y = (int) CamSpace4.y*CamSpace4.z;
+    CoordinateSpace.z = CamSpace4.z;
     return CoordinateSpace;
 }
 
@@ -54,6 +71,8 @@ int cosine(int angle, int lenght)
 {
     return ((SIN_LUT[90-angle]*lenght)>>8)+1;
 }
+
+
 
 void obj3Move(struct obj3 *Object, struct vec3 Vector)
 {
@@ -69,8 +88,6 @@ void obj3Process(struct obj3 *Object, struct mat4 MatrixProjection)
     gfx_SetColor(255);
     struct vec3 Points[3];
     struct vec2 ScreenPoints[3];
-
-    struct vec4 CamSpace;
 
     for (int k = 0; k < Object->triangle_number; k++){
 
@@ -180,7 +197,7 @@ int main(void)
 
     //3D Object(s)
     struct obj3 Cube = {0, {0}, 0, {0},{0, 0, 0}};
-    GenerateCubeObject(8, &Cube);
+    GenerateCubeObject(3, &Cube);
     //debug_obj3_vertices(&Cube, "    Cube");
 
     //Movement Vector
