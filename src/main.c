@@ -33,6 +33,26 @@ struct vec4 mat4MulVec4(struct mat4 Matrix, struct vec4 Vector)
     return Output;
 }
 
+struct vec4 extendVec3(struct vec3 Vector, int Value)
+{
+    struct vec4 Vector4;
+    Vector4.x = Vector.x;
+    Vector4.y = Vector.y;
+    Vector4.z = Vector.z;
+    Vector4.w = Value;
+    return Vector4;
+}
+
+struct vec3 reduce(struct vec4 Vector)
+{
+    struct vec3 Vector3;
+    Vector3.x = Vector.x;
+    Vector3.y = Vector.y;
+    Vector3.z = Vector.z;
+    return Vector3;
+}
+
+
 struct vec2 screenSpace(struct vec3 CoordinateSpace)
 {
     struct vec2 ScreenSpace;
@@ -42,11 +62,7 @@ struct vec2 screenSpace(struct vec3 CoordinateSpace)
 }
 struct vec3 coordinateSpace(struct vec3 CamSpace, struct mat4 MatrixProjection)
 {
-    struct vec4 CamSpace4;
-    CamSpace4.x = CamSpace.x;
-    CamSpace4.y = CamSpace.y;
-    CamSpace4.z = CamSpace.z;
-    CamSpace4.w = 1;
+    struct vec4 CamSpace4 = extendVec3(CamSpace, 1);
 
     CamSpace4 = mat4MulVec4(MatrixProjection, CamSpace4);
 
@@ -62,18 +78,6 @@ struct vec3 coordinateSpace(struct vec3 CamSpace, struct mat4 MatrixProjection)
     return CoordinateSpace;
 }
 
-int sine(int angle, int lenght)
-{
-    return ((SIN_LUT[angle]*lenght)>>8)+1;
-}
-
-int cosine(int angle, int lenght)
-{
-    return ((SIN_LUT[90-angle]*lenght)>>8)+1;
-}
-
-
-
 void obj3Move(struct obj3 *Object, struct vec3 Vector)
 {
     for (int i = 0; i < Object->vertices_number; i++) {
@@ -81,7 +85,92 @@ void obj3Move(struct obj3 *Object, struct vec3 Vector)
         Object->vertices[i].y += Vector.y;
         Object->vertices[i].z += Vector.z;
     }
+    Object->pos.x += Vector.x;
+    Object->pos.y += Vector.y;
+    Object->pos.z += Vector.z;
 }
+
+int sine(int angle)
+{
+    return SIN_LUT[angle];
+}
+
+int cosine(int angle)
+{
+    return SIN_LUT[90-angle];
+}
+
+struct mat4 buildRotX(int angle)
+{
+    int cos = cosine(angle);
+    int sin = sine(angle);
+    struct mat4 rotX = {{
+        {255, 0, 0, 0},
+        {0, cos, -sin, 0},
+        {0, sin, cos, 0},
+        {0, 0, 0, 255}
+    }};
+    return rotX;
+}
+
+struct mat4 buildRotY(int angle)
+{
+    int cos = cosine(angle);
+    int sin = sine(angle);
+    struct mat4 rotY = {{
+        {cos, 0, sin, 0},
+        {0, 255, -0, 0},
+        {-sin, 0, cos, 0},
+        {0, 0, 0, 255}
+    }};
+    return rotY;
+}
+
+struct mat4 buildRotZ(int angle)
+{
+        int cos = cosine(angle);
+        int sin = sine(angle);
+        struct mat4 rotZ = {{
+            {cos, -sin, 0, 0},
+            {sin, cos, 0, 0},
+            {0, 0, 255, 0},
+            {0, 0, 0, 255}
+        }};
+        return rotZ;
+
+}
+
+void obj3Rot(struct obj3 * Object, struct vec3 RotVector)
+{
+    struct mat4 MatrixRotation[] = {buildRotX(RotVector.x), buildRotY(RotVector.y), buildRotZ(RotVector.z)};
+    struct vec3 Pos;
+    Pos.x = -Object->pos.x;
+    Pos.y = -Object->pos.y;
+    Pos.z = -Object->pos.z;
+    obj3Move(Object, Pos);
+    struct vec4 Vertex;
+    for (int j = 0; j < 3; j++) {
+        for (int i = 0; i < Object->vertices_number; i++) {
+            Vertex = extendVec3(Object->vertices[i], 1);
+            dbg_printf("\n%d, %d\nAvant :", i, j);
+            debug_vec3(Object->vertices[i], "vertex");
+            Object->vertices[i] = reduce(mat4MulVec4(MatrixRotation[j], Vertex));
+            dbg_printf("L'entre deux :");
+            debug_vec3(Object->vertices[i], "vertex");
+            Object->vertices[i].x = (Object->vertices[i].x >> 8)+1;
+            Object->vertices[i].y = (Object->vertices[i].y >> 8)+1;
+            Object->vertices[i].z = (Object->vertices[i].z >> 8)+1;
+            dbg_printf("Apres :");
+            debug_vec3(Object->vertices[i], "vertex");
+        }
+    }
+    Pos.x = -Object->pos.x;
+    Pos.y = -Object->pos.y;
+    Pos.z = -Object->pos.z;
+    obj3Move(Object, Pos);
+}
+
+
 
 void obj3Process(struct obj3 *Object, struct mat4 MatrixProjection)
 {
@@ -202,6 +291,8 @@ int main(void)
 
     //Movement Vector
     struct vec3 MovementVector = {0, 0, 20};
+    struct vec3 RotVector = {30, 20, 30};
+    obj3Rot(&Cube, RotVector);
     obj3Move(&Cube, MovementVector);
     MovementVector.z = 0;
 
