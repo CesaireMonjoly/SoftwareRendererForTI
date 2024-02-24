@@ -1,4 +1,5 @@
 #include <tice.h>
+#include "fixed.h"
 
 #define ASPECT_RATIO 1.333333
 #define MAX_VERTICES 64
@@ -7,26 +8,26 @@
 
 struct mat4
 {
-    int m[4][4];
+    fixed_point m[4][4];
 };
 
 struct vec4
 {
-    int x;
-    int y;
-    int z;
-    int w;
+    fixed_point x;
+    fixed_point y;
+    fixed_point z;
+    fixed_point w;
 };
 struct vec3
 {
-    int x;
-    int y;
-    int z;
+    fixed_point x;
+    fixed_point y;
+    fixed_point z;
 };
 struct vec2
 {
-    int x;
-    int y;
+    fixed_point x;
+    fixed_point y;
 };
 struct obj3
 {
@@ -38,10 +39,10 @@ struct obj3
 };
 struct cam
 {
-    float fov;
-    float aspectRatio;
-    int zNear;
-    int zFar;
+    fixed_point fov;
+    fixed_point aspectRatio;
+    fixed_point zNear;
+    fixed_point zFar;
     struct vec3 pos;
 };
 /** Generated using Dr LUT - Free Lookup Table Generator

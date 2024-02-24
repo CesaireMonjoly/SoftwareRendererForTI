@@ -6,6 +6,7 @@
 
 #include "type.h"
 
+
 void buildMatrixProjection(float Fov, float AspectRatio, int ZNear, int ZFar, struct mat4 *MatrixProjection)
 {
     MatrixProjection->m[0][0] = 1;//((1/tan(Fov/2)) * AspectRatio)*255;
@@ -14,13 +15,12 @@ void buildMatrixProjection(float Fov, float AspectRatio, int ZNear, int ZFar, st
     MatrixProjection->m[3][2] = (-ZFar * ZNear)/(ZFar-ZNear);//*255;
     MatrixProjection->m[2][3] = 1;//255;
 
-    debug_matrix4(*MatrixProjection, "Porjection");
+    debug_matrix4(*MatrixProjection, "Projection");
     /*
      * I'm currently trying to implement a bette matrix projection without using floats
      * The idea is to multiply the whole matrix by 255,
      * and when we multiply the matrix with the vec4 we will have to divide by 255 and round
     */
-
 }
 
 struct vec4 mat4MulVec4(struct mat4 Matrix, struct vec4 Vector)
