@@ -8,17 +8,17 @@
 
 void buildMatrixProjection(float Fov, float AspectRatio, int ZNear, int ZFar, struct mat4 *MatrixProjection)
 {
-    MatrixProjection->m[0][0] = 1;//((1/tan(Fov/2)) * AspectRatio)*255;
-    MatrixProjection->m[1][1] = 1;//((1/tan(Fov/2)))*255;
-    MatrixProjection->m[2][2] = (ZFar/(ZFar - ZNear) );//*255;
-    MatrixProjection->m[3][2] = (-ZFar * ZNear)/(ZFar-ZNear);//*255;
-    MatrixProjection->m[2][3] = 1;//255;
+    MatrixProjection->m[0][0] = 1;//((1/tan(Fov/2)) * AspectRatio)*256;
+    MatrixProjection->m[1][1] = 1;//((1/tan(Fov/2)))*256;
+    MatrixProjection->m[2][2] = (ZFar/(ZFar - ZNear) );//*256;
+    MatrixProjection->m[3][2] = (-ZFar * ZNear)/(ZFar-ZNear);//*256;
+    MatrixProjection->m[2][3] = 1;//256;
 
     debug_matrix4(*MatrixProjection, "Porjection");
     /*
      * I'm currently trying to implement a bette matrix projection without using floats
-     * The idea is to multiply the whole matrix by 255,
-     * and when we multiply the matrix with the vec4 we will have to divide by 255 and round
+     * The idea is to multiply the whole matrix by 256,
+     * and when we multiply the matrix with the vec4 we will have to divide by 256 and round
     */
 
 }
@@ -105,10 +105,10 @@ struct mat4 buildRotX(int angle)
     int cos = cosine(angle);
     int sin = sine(angle);
     struct mat4 rotX = {{
-        {255, 0, 0, 0},
+        {256, 0, 0, 0},
         {0, cos, -sin, 0},
         {0, sin, cos, 0},
-        {0, 0, 0, 255}
+        {0, 0, 0, 256}
     }};
     return rotX;
 }
@@ -119,9 +119,9 @@ struct mat4 buildRotY(int angle)
     int sin = sine(angle);
     struct mat4 rotY = {{
         {cos, 0, sin, 0},
-        {0, 255, -0, 0},
+        {0, 256, -0, 0},
         {-sin, 0, cos, 0},
-        {0, 0, 0, 255}
+        {0, 0, 0, 256}
     }};
     return rotY;
 }
@@ -133,8 +133,8 @@ struct mat4 buildRotZ(int angle)
         struct mat4 rotZ = {{
             {cos, -sin, 0, 0},
             {sin, cos, 0, 0},
-            {0, 0, 255, 0},
-            {0, 0, 0, 255}
+            {0, 0, 256, 0},
+            {0, 0, 0, 256}
         }};
         return rotZ;
 
