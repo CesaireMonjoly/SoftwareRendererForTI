@@ -1,7 +1,7 @@
 #include <tice.h>
 #include "fixed.h"
 
-#define ASPECT_RATIO 1.333333
+#define ASPECT_RATIO 1
 #define MAX_VERTICES 64
 #define MAX_TRIANGLES (MAX_VERTICES * 2)
 
@@ -32,7 +32,7 @@ struct vec2
 struct obj3
 {
     int vertices_number;
-    struct vec3 vertices[MAX_VERTICES]; // oj3->vertices[0] refer to the "center"/"position" of the object but the others vertices are not related to it
+    struct vec3 vertices[MAX_VERTICES];
     int triangle_number;
     struct vec3 triangles[MAX_TRIANGLES]; // ve3 {x, y, z} with x, y and z (all different from 0) the index of vertices that can form a triangle
     struct vec3 pos;
@@ -49,7 +49,7 @@ struct cam
   * https://github.com/ppelikan/drlut
   **/
 // Formula: sin(2*pi*t/T)
-const int16_t SIN_LUT[361] = {
+const int24_t SIN_LUT[361] = {
         0x0000,0x0004,0x0009,0x000D,0x0012,0x0016,0x001B,
         0x001F,0x0023,0x0028,0x002C,0x0031,0x0035,0x0039,
         0x003E,0x0042,0x0046,0x004A,0x004F,0x0053,0x0057,
@@ -104,24 +104,24 @@ const int16_t SIN_LUT[361] = {
         0xFFEE,0xFFF3,0xFFF7,0xFFFC };
 
 
-void debug_vec2(struct vec2 Obj, char Name[])
+void debug_vec2(struct vec2 Vec, char Name[])
 {
-    dbg_printf("\n%s.x = %d\n", Name, Obj.x);
-    dbg_printf("%s.y = %d\n", Name, Obj.y);
+    dbg_printf("\n%s.x = %d\n", Name, Vec.x);
+    dbg_printf("%s.y = %d\n", Name, Vec.y);
 }
 
-void debug_vec3(struct vec3 Obj, char Name[])
+void debug_vec3(struct vec3 Vec, char Name[])
 {
-    dbg_printf("\n%s.x = %d\n", Name, Obj.x);
-    dbg_printf("%s.y = %d\n", Name, Obj.y);
-    dbg_printf("%s.z = %d\n", Name, Obj.z);
+    dbg_printf("\n%s.x = %d\n", Name, Vec.x);
+    dbg_printf("%s.y = %d\n", Name, Vec.y);
+    dbg_printf("%s.z = %d\n", Name, Vec.z);
 }
-void debug_vec4(struct vec4 Obj, char Name[])
+void debug_vec4(struct vec4 Vec, char Name[])
 {
-    dbg_printf("\n%s.x = %d\n", Name, Obj.x);
-    dbg_printf("%s.y = %d\n", Name, Obj.y);
-    dbg_printf("%s.z = %d\n", Name, Obj.z);
-    dbg_printf("%s.w = %d\n", Name, Obj.w);
+    dbg_printf("\n%s.x = %d\n", Name, Vec.x);
+    dbg_printf("%s.y = %d\n", Name, Vec.y);
+    dbg_printf("%s.z = %d\n", Name, Vec.z);
+    dbg_printf("%s.w = %d\n", Name, Vec.w);
 
 }
 
