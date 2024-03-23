@@ -59,18 +59,18 @@ struct vec2 reduceVec3(struct vec3 Vector)
 struct vec2 screenSpace(struct vec2 CoordinateSpace)
 {
     struct vec2 ScreenSpace;
-    //debug_vec2(CoordinateSpace, "CoordinateSpace");
-    ScreenSpace.x = CoordinateSpace.x + 160;
-    ScreenSpace.y = fmul(CoordinateSpace.y, -1) + 120;
+    //debug_vec2(CoordinateSpace, "Coordinate");
+    ScreenSpace.x = CoordinateSpace.x + int_to_fixed(160);
+    ScreenSpace.y = fmul(CoordinateSpace.y, int_to_fixed(-1)) + int_to_fixed(120);
     //debug_vec2(ScreenSpace, "ScreenSpace");
-
     return ScreenSpace;
 }
+
 struct vec3 ProjectPoint(struct vec3 Point, struct mat4 MatrixProjection)
 {
     //debug_vec3(Point, "post");
 
-    struct vec4 Point4 = extendVec3(Point, 1);
+    struct vec4 Point4 = extendVec3(Point, int_to_fixed(1));
 
     //debug_vec4(Point4, "Point Before");
 
@@ -79,24 +79,22 @@ struct vec3 ProjectPoint(struct vec3 Point, struct mat4 MatrixProjection)
     //debug_vec4(Point4, "Point After");
 
     struct vec3 CoordinateSpace;
-    CoordinateSpace.x = fmul(Point4.x, Point4.z);
-    CoordinateSpace.y = fmul(Point4.y, Point4.z);
+    CoordinateSpace.x = fdiv(Point4.x, Point4.z);
+    CoordinateSpace.y = fdiv(Point4.y, Point4.z);
     CoordinateSpace.z = Point4.z;
     return CoordinateSpace;
 }
 
 void obj3Move(struct obj3 *Object, struct vec3 Vector)
 {
-    for (int i = 0; i < Object->vertices_number; i++) {
-        debug_vec3(Object->vertices[i], "vertex before");
+    for (int i = 0; i < Object->vertices_number; i++) {;
         Object->vertices[i].x = Object->vertices[i].x + Vector.x;
         Object->vertices[i].y = Object->vertices[i].y + Vector.y;
         Object->vertices[i].z = Object->vertices[i].z + Vector.z;
-        debug_vec3(Object->vertices[i], "vertex after");
     }
-/*    Object->pos.x += Vector.x;
+    Object->pos.x += Vector.x;
     Object->pos.y += Vector.y;
-    Object->pos.z += Vector.z;*/
+    Object->pos.z += Vector.z;
 }
 
 int sine(int angle)
@@ -113,11 +111,12 @@ struct mat4 buildRotX(int angle)
 {
     int cos = cosine(angle);
     int sin = sine(angle);
+    fixed_point identity = int_to_fixed(1);
     struct mat4 rotX = {{
-        {255, 0, 0, 0},
+        {identity, 0, 0, 0},
         {0, cos, -sin, 0},
         {0, sin, cos, 0},
-        {0, 0, 0, 255}
+        {0, 0, 0, identity}
     }};
     return rotX;
 }
@@ -126,27 +125,28 @@ struct mat4 buildRotY(int angle)
 {
     int cos = cosine(angle);
     int sin = sine(angle);
+    fixed_point identity = int_to_fixed(1);
     struct mat4 rotY = {{
         {cos, 0, sin, 0},
-        {0, 255, -0, 0},
+        {0, identity, -0, 0},
         {-sin, 0, cos, 0},
-        {0, 0, 0, 255}
+        {0, 0, 0, identity}
     }};
     return rotY;
 }
 
 struct mat4 buildRotZ(int angle)
 {
-        int cos = cosine(angle);
-        int sin = sine(angle);
-        struct mat4 rotZ = {{
-            {cos, -sin, 0, 0},
-            {sin, cos, 0, 0},
-            {0, 0, 255, 0},
-            {0, 0, 0, 255}
-        }};
-        return rotZ;
-
+    int cos = cosine(angle);
+    int sin = sine(angle);
+    fixed_point identity = int_to_fixed(1);
+    struct mat4 rotZ = {{
+        {cos, -sin, 0, 0},
+        {sin, cos, 0, 0},
+        {0, 0, identity, 0},
+        {0, 0, 0, identity}
+    }};
+    return rotZ;
 }
 
 void obj3Rot(struct obj3 * Object, struct vec3 RotVector)
@@ -171,7 +171,6 @@ void obj3Rot(struct obj3 * Object, struct vec3 RotVector)
 }
 
 
-
 void obj3Process(struct obj3 *Object, struct mat4 MatrixProjection)
 {
     gfx_SetColor(255);
@@ -179,14 +178,6 @@ void obj3Process(struct obj3 *Object, struct mat4 MatrixProjection)
     struct vec2 ScreenPoints[3];
 
     for (int k = 0; k < Object->triangle_number; k++){
-
-        //debug_vec3(Object->vertices[k], "triangles");
-        /*
-        dbg_printf("\nVraiment avant");
-        debug_vec3(Object->vertices[Object->triangles[k].x], "vertex.x");
-        debug_vec3(Object->vertices[Object->triangles[k].y], "vertex.y");
-        debug_vec3(Object->vertices[Object->triangles[k].z], "vertex.z");
-*/
         Points[0] = ProjectPoint(Object->vertices[Object->triangles[k].x], MatrixProjection);
         Points[1] = ProjectPoint(Object->vertices[Object->triangles[k].y], MatrixProjection);
         Points[2] = ProjectPoint(Object->vertices[Object->triangles[k].z], MatrixProjection);
@@ -195,24 +186,13 @@ void obj3Process(struct obj3 *Object, struct mat4 MatrixProjection)
         ScreenPoints[1] = screenSpace(reduceVec3(Points[1]));
         ScreenPoints[2] = screenSpace(reduceVec3(Points[2]));
 
-/*        dbg_printf("\nAvant :");
-        debug_vec2(ScreenPoints[0], "ScreenPoint[0]");
-        debug_vec2(ScreenPoints[1], "ScreenPoint[1]");
-        debug_vec2(ScreenPoints[2], "ScreenPoint[2]");
-*/
+        ScreenPoints[0].x = (int) (fixed_to_int(ScreenPoints[0].x));
+        ScreenPoints[0].y = (int) (fixed_to_int(ScreenPoints[0].y));
+        ScreenPoints[1].x = (int) (fixed_to_int(ScreenPoints[1].x));
+        ScreenPoints[1].y = (int) (fixed_to_int(ScreenPoints[1].y));
+        ScreenPoints[2].x = (int) (fixed_to_int(ScreenPoints[2].x));
+        ScreenPoints[2].y = (int) (fixed_to_int(ScreenPoints[2].y));
 
-        ScreenPoints[0].x = (int) (fixed_to_double(ScreenPoints[0].x));
-        ScreenPoints[0].y = (int) (fixed_to_double(ScreenPoints[0].y));
-        ScreenPoints[1].x = (int) (fixed_to_double(ScreenPoints[1].x));
-        ScreenPoints[1].y = (int) (fixed_to_double(ScreenPoints[1].y));
-        ScreenPoints[2].x = (int) (fixed_to_double(ScreenPoints[2].x));
-        ScreenPoints[2].y = (int) (fixed_to_double(ScreenPoints[2].y));
-/*
-        dbg_printf("\nApres :");
-        debug_vec2(ScreenPoints[0], "ScreenPoint[0]");
-        debug_vec2(ScreenPoints[1], "ScreenPoint[1]");
-        debug_vec2(ScreenPoints[2], "ScreenPoint[2]");
-*/
         gfx_Line(ScreenPoints[0].x, ScreenPoints[0].y, ScreenPoints[1].x, ScreenPoints[1].y);
         gfx_Line(ScreenPoints[1].x, ScreenPoints[1].y, ScreenPoints[2].x, ScreenPoints[2].y);
         gfx_Line(ScreenPoints[2].x, ScreenPoints[2].y, ScreenPoints[0].x, ScreenPoints[0].y);
