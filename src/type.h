@@ -106,22 +106,22 @@ const int24_t SIN_LUT[361] = {
 
 void debug_vec2(struct vec2 Vec, char Name[])
 {
-    dbg_printf("\n%s.x = %d\n", Name, Vec.x);
-    dbg_printf("%s.y = %d\n", Name, Vec.y);
+    dbg_printf("\n%s.x = %d\n", Name, fixed_to_int(Vec.x));
+    dbg_printf("%s.y = %d\n", Name, fixed_to_int(Vec.y));
 }
 
 void debug_vec3(struct vec3 Vec, char Name[])
 {
-    dbg_printf("\n%s.x = %d\n", Name, Vec.x);
-    dbg_printf("%s.y = %d\n", Name, Vec.y);
-    dbg_printf("%s.z = %d\n", Name, Vec.z);
+    dbg_printf("\n%s.x = %d\n", Name, fixed_to_int(Vec.x));
+    dbg_printf("%s.y = %d\n", Name, fixed_to_int(Vec.y));
+    dbg_printf("%s.z = %d\n", Name, fixed_to_int(Vec.z));
 }
 void debug_vec4(struct vec4 Vec, char Name[])
 {
-    dbg_printf("\n%s.x = %d\n", Name, Vec.x);
-    dbg_printf("%s.y = %d\n", Name, Vec.y);
-    dbg_printf("%s.z = %d\n", Name, Vec.z);
-    dbg_printf("%s.w = %d\n", Name, Vec.w);
+    dbg_printf("\n%s.x = %d\n", Name, fixed_to_int(Vec.x));
+    dbg_printf("%s.y = %d\n", Name, fixed_to_int(Vec.y));
+    dbg_printf("%s.z = %d\n", Name, fixed_to_int(Vec.z));
+    dbg_printf("%s.w = %d\n", Name, fixed_to_int(Vec.w));
 
 }
 

@@ -13,7 +13,7 @@ void buildMatrixProjection(fixed_point Fov, fixed_point AspectRatio, fixed_point
     MatrixProjection->m[1][1] = double_to_fixed(1/tan(fixed_to_double(Fov)/2));
     MatrixProjection->m[2][2] = fdiv(ZFar, (ZFar - ZNear) );
     MatrixProjection->m[3][2] = fdiv(fmul(-ZFar, ZNear),(ZFar-ZNear));
-    MatrixProjection->m[2][3] = 1;
+    MatrixProjection->m[2][3] = int_to_fixed(1);
 
     debug_matrix4(*MatrixProjection, "Matrix projection");
 }
@@ -59,14 +59,20 @@ struct vec2 reduceVec3(struct vec3 Vector)
 struct vec2 screenSpace(struct vec2 CoordinateSpace)
 {
     struct vec2 ScreenSpace;
-    //debug_vec2(CoordinateSpace, "Coordinate");
-    ScreenSpace.x = CoordinateSpace.x + int_to_fixed(160);
-    ScreenSpace.y = fmul(CoordinateSpace.y, int_to_fixed(-1)) + int_to_fixed(120);
-    //debug_vec2(ScreenSpace, "ScreenSpace");
+    dbg_printf("Avant\n");
+    dbg_printf("CoordinateSpace.x = %d\nCoordinateSpace.x = %f\n\n", CoordinateSpace.x, fixed_to_double(CoordinateSpace.x));
+    dbg_printf("CoordinateSpace.y = %d\nCoordinateSpace.y = %f\n\n", CoordinateSpace.y, fixed_to_double(CoordinateSpace.y));
+
+    ScreenSpace.x = fixed_to_int((CoordinateSpace.x + int_to_fixed(160)));
+    ScreenSpace.y = fixed_to_int(fmul(CoordinateSpace.y, int_to_fixed(-1)) + int_to_fixed(120));
+
+    dbg_printf("Apres\n");
+    dbg_printf("ScreenSpace.x = %d\nScreenSpace.x = %f\n\n", ScreenSpace.x, fixed_to_double(ScreenSpace.x));
+    dbg_printf("ScreenSpace.y = %d\nScreenSpace.y = %f\n\n", ScreenSpace.y, fixed_to_double(ScreenSpace.y));
     return ScreenSpace;
 }
 
-struct vec3 ProjectPoint(struct vec3 Point, struct mat4 MatrixProjection)
+struct vec2 ProjectPoint(struct vec3 Point, struct mat4 MatrixProjection)
 {
     //debug_vec3(Point, "post");
 
@@ -74,14 +80,17 @@ struct vec3 ProjectPoint(struct vec3 Point, struct mat4 MatrixProjection)
 
     //debug_vec4(Point4, "Point Before");
 
-    Point4 = mat4MulVec4(MatrixProjection, Point4);
+    //Point4 = mat4MulVec4(MatrixProjection, Point4);
 
-    //debug_vec4(Point4, "Point After");
+    //debug_vec4(Point4, "Point Before");
 
-    struct vec3 CoordinateSpace;
+    struct vec2 CoordinateSpace;
     CoordinateSpace.x = fdiv(Point4.x, Point4.z);
     CoordinateSpace.y = fdiv(Point4.y, Point4.z);
-    CoordinateSpace.z = Point4.z;
+    //CoordinateSpace.z = Point4.z;
+
+    //debug_vec3(CoordinateSpace, "Point After");
+
     return CoordinateSpace;
 }
 
@@ -174,24 +183,22 @@ void obj3Rot(struct obj3 * Object, struct vec3 RotVector)
 void obj3Process(struct obj3 *Object, struct mat4 MatrixProjection)
 {
     gfx_SetColor(255);
-    struct vec3 Points[3];
+    struct vec2 Points[3];
     struct vec2 ScreenPoints[3];
 
     for (int k = 0; k < Object->triangle_number; k++){
+
         Points[0] = ProjectPoint(Object->vertices[Object->triangles[k].x], MatrixProjection);
         Points[1] = ProjectPoint(Object->vertices[Object->triangles[k].y], MatrixProjection);
         Points[2] = ProjectPoint(Object->vertices[Object->triangles[k].z], MatrixProjection);
-
-        ScreenPoints[0] = screenSpace(reduceVec3(Points[0]));
-        ScreenPoints[1] = screenSpace(reduceVec3(Points[1]));
-        ScreenPoints[2] = screenSpace(reduceVec3(Points[2]));
-
-        ScreenPoints[0].x = (int) (fixed_to_int(ScreenPoints[0].x));
-        ScreenPoints[0].y = (int) (fixed_to_int(ScreenPoints[0].y));
-        ScreenPoints[1].x = (int) (fixed_to_int(ScreenPoints[1].x));
-        ScreenPoints[1].y = (int) (fixed_to_int(ScreenPoints[1].y));
-        ScreenPoints[2].x = (int) (fixed_to_int(ScreenPoints[2].x));
-        ScreenPoints[2].y = (int) (fixed_to_int(ScreenPoints[2].y));
+/*
+        debug_vec3(Points[0], "Projected");
+        debug_vec3(Points[1], "Projected");
+        debug_vec3(Points[2], "Projected");
+*/
+        ScreenPoints[0] = screenSpace(Points[0]);
+        ScreenPoints[1] = screenSpace(Points[1]);
+        ScreenPoints[2] = screenSpace(Points[2]);
 
         gfx_Line(ScreenPoints[0].x, ScreenPoints[0].y, ScreenPoints[1].x, ScreenPoints[1].y);
         gfx_Line(ScreenPoints[1].x, ScreenPoints[1].y, ScreenPoints[2].x, ScreenPoints[2].y);
@@ -281,12 +288,6 @@ int main(void)
     gfx_Begin();
     gfx_SetDrawBuffer();
 
-    fixed_point a = double_to_fixed(6.8);
-    dbg_printf("%d\n", a);
-    double b = fixed_to_double(a);
-    dbg_printf("%f\n", b);
-
-
     //Camera
     struct cam Camera = {90, ASPECT_RATIO, 3, 50,{0, 0, -20}};
 
@@ -295,17 +296,15 @@ int main(void)
 
     //3D Object(s)
     struct obj3 Cube = {0, {0}, 0, {0},{0, 0, 0}};
-    GenerateCubeObject(int_to_fixed(3), &Cube);
+    GenerateCubeObject(int_to_fixed(4), &Cube);
     //debug_obj3_vertices(&Cube, "    Cube");
 
     //Movement Vector
-    struct vec3 MovementVector = {int_to_fixed(3), int_to_fixed(10), int_to_fixed(20)};
+    struct vec3 MovementVector = {int_to_fixed(80), int_to_fixed(10), int_to_fixed(20)};
     //struct vec3 RotVector = {30, 20, 30};
     //obj3Rot(&Cube, RotVector);
     obj3Move(&Cube, MovementVector);
     MovementVector.z = 0;
-
-
 
     do {
         InputMovement(&MovementVector);
