@@ -1,7 +1,7 @@
 #include <tice.h>
 #include "fixed.h"
 
-#define ASPECT_RATIO 1
+#define ASPECT_RATIO 4/3
 #define MAX_VERTICES 64
 #define MAX_TRIANGLES (MAX_VERTICES * 2)
 
