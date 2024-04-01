@@ -1,9 +1,9 @@
 #include <tice.h>
 #include <keypadc.h>
 #include <graphx.h>
-#include "debug.h"
 
-#include "type.h"
+
+#include "obj.h"
 
 
 void buildMatrixProjection(fixed_point Fov, fixed_point AspectRatio, fixed_point ZNear, fixed_point ZFar, struct mat4 *MatrixProjection)
@@ -14,7 +14,7 @@ void buildMatrixProjection(fixed_point Fov, fixed_point AspectRatio, fixed_point
     MatrixProjection->m[3][2] = int_to_fixed(1);//fdiv(fmul(-ZFar, ZNear),(ZFar-ZNear));
     MatrixProjection->m[2][3] = int_to_fixed(1);
 
-    debug_matrix4(*MatrixProjection, "Matrix projection");
+    //debug_matrix4(*MatrixProjection, "Matrix projection");
 }
 
 struct vec4 mat4MulVec4(struct mat4 Matrix, struct vec4 Vector)
@@ -86,15 +86,6 @@ void obj3Move(struct obj3 *Object, struct vec3 Vector)
     Object->pos.z += Vector.z;
 }
 
-int sine(int angle)
-{
-    return SIN_LUT[angle];
-}
-
-int cosine(int angle)
-{
-    return SIN_LUT[90-angle];
-}
 
 struct mat4 buildRotX(int angle)
 {
@@ -188,7 +179,7 @@ int GenerateCubeObject(int Size, struct obj3 *Cube)
         Cube->vertices[i].x = fmul(int_to_fixed(i & 0x1), Size);
         Cube->vertices[i].y = fmul(int_to_fixed((i & 0x2)>>1), Size);
         Cube->vertices[i].z = fmul(int_to_fixed((i & 0x4)>>2), Size);
-        debug_vec3(Cube->vertices[i], "Cube");
+        //debug_vec3(Cube->vertices[i], "Cube");
     }
 
 
@@ -294,7 +285,6 @@ int main(void)
             MovementVector.x = -Cube.pos.x;
             MovementVector.y = -Cube.pos.y;
             MovementVector.z = -Cube.pos.z;
-            dbg_printf("coucou");
             obj3Move(&Cube, MovementVector);
         }
         obj3Process(&Cube, MatrixProjection);

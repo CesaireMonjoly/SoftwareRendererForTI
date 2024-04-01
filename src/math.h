@@ -1,4 +1,3 @@
-#include <tice.h>
 #include "fixed.h"
 
 #define ASPECT_RATIO 1.33333
@@ -10,7 +9,6 @@ struct mat4
 {
     fixed_point m[4][4];
 };
-
 struct vec4
 {
     fixed_point x;
@@ -29,26 +27,8 @@ struct vec2
     fixed_point x;
     fixed_point y;
 };
-struct obj3
-{
-    int vertices_number;
-    struct vec3 vertices[MAX_VERTICES];
-    int triangle_number;
-    struct vec3 triangles[MAX_TRIANGLES]; // ve3 {x, y, z} with x, y and z (all different from 0) the index of vertices that can form a triangle
-    struct vec3 pos;
-};
-struct cam
-{
-    fixed_point fov;
-    fixed_point aspectRatio;
-    fixed_point zNear;
-    fixed_point zFar;
-    struct vec3 pos;
-};
-/** Generated using Dr LUT - Free Lookup Table Generator
-  * https://github.com/ppelikan/drlut
-  **/
-// Formula: sin(2*pi*t/T)
+
+
 const int24_t SIN_LUT[361] = {0, 1, 2, 3, 4, 6, 7, 8, 9, 10,
                               11, 12, 13, 14, 15, 17, 18, 19, 20, 21,
                               22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
@@ -87,7 +67,17 @@ const int24_t SIN_LUT[361] = {0, 1, 2, 3, 4, 6, 7, 8, 9, 10,
                               -11, -10, -9, -8, -7, -6, -4, -3, -2, -1,
                               0};
 
+int sine(int angle)
+{
+    return SIN_LUT[angle];
+}
 
+int cosine(int angle)
+{
+    return SIN_LUT[90-angle];
+}
+
+/*
 void debug_vec2(struct vec2 Vec, char Name[])
 {
     dbg_printf("\n%s.x = %f\n", Name, fixed_to_double(Vec.x));
@@ -128,3 +118,4 @@ void debug_obj3_vertices(struct obj3 *Obj, char Name[])
         debug_vec3(Obj->vertices[i], Name);
     }
 }
+*/
