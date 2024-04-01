@@ -1,18 +1,17 @@
 #include <tice.h>
 #include <keypadc.h>
 #include <graphx.h>
-#include <debug.h>
-#include <math.h>
+#include "debug.h"
 
 #include "type.h"
 
 
 void buildMatrixProjection(fixed_point Fov, fixed_point AspectRatio, fixed_point ZNear, fixed_point ZFar, struct mat4 *MatrixProjection)
 {
-    MatrixProjection->m[0][0] = fmul(double_to_fixed(1/tan(fixed_to_double(Fov)/2)), AspectRatio);
-    MatrixProjection->m[1][1] = double_to_fixed(1/tan(fixed_to_double(Fov)/2));
-    MatrixProjection->m[2][2] = fdiv(ZFar, (ZFar - ZNear) );
-    MatrixProjection->m[3][2] = fdiv(fmul(-ZFar, ZNear),(ZFar-ZNear));
+    MatrixProjection->m[0][0] = int_to_fixed(1);//fmul(double_to_fixed(1/tan(fixed_to_double(Fov)/2)), AspectRatio);
+    MatrixProjection->m[1][1] = int_to_fixed(1);//double_to_fixed(1/tan(fixed_to_double(Fov)/2));
+    MatrixProjection->m[2][2] = int_to_fixed(1);//fdiv(ZFar, (ZFar - ZNear));
+    MatrixProjection->m[3][2] = int_to_fixed(1);//fdiv(fmul(-ZFar, ZNear),(ZFar-ZNear));
     MatrixProjection->m[2][3] = int_to_fixed(1);
 
     debug_matrix4(*MatrixProjection, "Matrix projection");
@@ -69,6 +68,7 @@ struct vec2 ProjectPoint(struct vec3 Point, struct mat4 MatrixProjection)
     struct vec4 Point4 = extendVec3(Point, int_to_fixed(1));
     Point4 = mat4MulVec4(MatrixProjection, Point4);
     struct vec2 CoordinateSpace;
+    Point4.z = fmul(Point4.z, double_to_fixed(0.02));
     CoordinateSpace.x = (fdiv(Point4.x, Point4.z));
     CoordinateSpace.y = (fdiv(Point4.y, Point4.z));
     return CoordinateSpace;
@@ -76,7 +76,7 @@ struct vec2 ProjectPoint(struct vec3 Point, struct mat4 MatrixProjection)
 
 void obj3Move(struct obj3 *Object, struct vec3 Vector)
 {
-    for (int i = 0; i < Object->vertices_number; i++) {;
+    for (int i = 0; i < Object->vertices_number; i++) {
         Object->vertices[i].x = Object->vertices[i].x + Vector.x;
         Object->vertices[i].y = Object->vertices[i].y + Vector.y;
         Object->vertices[i].z = Object->vertices[i].z + Vector.z;
@@ -153,9 +153,9 @@ void obj3Rot(struct obj3 * Object, struct vec3 RotVector)
             Object->vertices[i] = reduceVec4(mat4MulVec4(MatrixRotation[j], Vertex));
         }
     }
-    Pos.x = -Object->pos.x;
-    Pos.y = -Object->pos.y;
-    Pos.z = -Object->pos.z;
+    Pos.x = -Pos.x;
+    Pos.y = -Pos.y;
+    Pos.z = -Pos.z;
     obj3Move(Object, Pos);
 }
 
@@ -167,7 +167,6 @@ void obj3Process(struct obj3 *Object, struct mat4 MatrixProjection)
     struct vec2 ScreenPoints[3];
 
     for (int k = 0; k < Object->triangle_number; k++){
-
         Points[0] = ProjectPoint(Object->vertices[Object->triangles[k].x], MatrixProjection);
         Points[1] = ProjectPoint(Object->vertices[Object->triangles[k].y], MatrixProjection);
         Points[2] = ProjectPoint(Object->vertices[Object->triangles[k].z], MatrixProjection);
@@ -235,24 +234,24 @@ void InputMovement(struct vec3 *Movement)
     Movement->z = 0;
     kb_Scan();
     if (kb_Power & kb_Data[6]){
-        Movement->z = int_to_fixed(5);
+        Movement->z = int_to_fixed(20);
     }
     else if (kb_Div & kb_Data[6]){
-        Movement->z = int_to_fixed(-5);
+        Movement->z = int_to_fixed(-20);
     }
 
     if (kb_Right & kb_Data[7]){
-        Movement->x = int_to_fixed(5);
+        Movement->x = int_to_fixed(20);
     }
     else if (kb_Left & kb_Data[7]){
-        Movement->x = int_to_fixed(-5);
+        Movement->x = int_to_fixed(-20);
     }
 
     if (kb_Up & kb_Data[7]){
-        Movement->y = int_to_fixed(5);
+        Movement->y = int_to_fixed(20);
     }
     else if (kb_Down & kb_Data[7]){
-        Movement->y = int_to_fixed(-5);
+        Movement->y = int_to_fixed(-20);
     }
 
 }
@@ -273,18 +272,33 @@ int main(void)
 
     //3D Object(s)
     struct obj3 Cube = {0, {0}, 0, {0},{0, 0, 0}};
-    GenerateCubeObject(int_to_fixed(2), &Cube);
+    GenerateCubeObject(int_to_fixed(150), &Cube);
+    struct obj3 Cube1 = {0, {0}, 0, {0},{0, 0, 0}};
+    GenerateCubeObject(int_to_fixed(80), &Cube1);
 
     //Movement Vector
     struct vec3 MovementVector = {int_to_fixed(80), int_to_fixed(10), int_to_fixed(20)};
-    //struct vec3 RotVector = {30, 20, 30};
+    struct vec3 RotVector = {1, 1, 1};
     //obj3Rot(&Cube, RotVector);
     obj3Move(&Cube, MovementVector);
+
     MovementVector.z = 0;
 
     do {
         InputMovement(&MovementVector);
+        //obj3Rot(&Cube, RotVector);
         obj3Move(&Cube, MovementVector);
+        kb_Scan();
+        if (kb_5 & kb_Data[4]){
+            obj3Rot(&Cube, RotVector);
+        }
+        if (kb_1 & kb_Data[3]){ // replace cube to 0, 0, 0
+            MovementVector.x = -Cube.pos.x;
+            MovementVector.y = -Cube.pos.y;
+            MovementVector.z = -Cube.pos.z;
+            dbg_printf("coucou");
+            obj3Move(&Cube, MovementVector);
+        }
         obj3Process(&Cube, MatrixProjection);
         gfx_SetColor(0);
         gfx_SwapDraw();

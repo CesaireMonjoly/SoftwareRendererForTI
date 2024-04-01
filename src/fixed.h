@@ -1,4 +1,4 @@
-#define FRACTION_BITS 8
+#define FRACTION_BITS 6
 #define FRACTION_SCALE (1 << FRACTION_BITS)
 
 typedef int24_t fixed_point;
@@ -40,10 +40,10 @@ int24_t toFixedPoint(int integer_part, int decimalPart) {
 
 // Basic arithmetic operations for fixed point numbers (using short name for readability, e.g. real name will be fixed_multiply)
 fixed_point fmul(fixed_point a, fixed_point b) {
-    return (fixed_point)((a * b) / FRACTION_BITS);
+    return (fixed_point)((a * b) >> FRACTION_BITS);
 }
 
 
 fixed_point fdiv(fixed_point a, fixed_point b) {
-    return ((long long)a * FRACTION_SCALE) / b;
+    return ((long long)a << FRACTION_BITS) / b;
 }
