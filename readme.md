@@ -1,6 +1,7 @@
 ### 3D graphics for TI calculator 
 
 A basic software renderer that let you display a 3D cude :p
+![Cube](https://github.com/CesaireMonjoly/SoftwareRendererForTI/assets/69987910/9fe9bc50-1294-4244-9865-d79266003d8f)
 
 
 ### Compile 
