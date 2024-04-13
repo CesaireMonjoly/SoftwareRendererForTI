@@ -9,6 +9,11 @@ struct mat4
 {
     fixed_point m[4][4];
 };
+
+struct mat3
+{
+    fixed_point m[3][3];
+};
 struct vec4
 {
     fixed_point x;
@@ -67,6 +72,24 @@ const int24_t SIN_LUT[361] = {0, 1, 2, 3, 4, 6, 7, 8, 9, 10,
                               -11, -10, -9, -8, -7, -6, -4, -3, -2, -1,
                               0};
 
+struct vec4 mat4MulVec4(struct mat4 Matrix, struct vec4 Vector)
+{
+    struct vec4 Output;
+    Output.x = fmul(Matrix.m[0][0], Vector.x) + fmul(Matrix.m[0][1],Vector.y) + fmul(Matrix.m[0][2], Vector.z) + fmul(Matrix.m[0][3], Vector.w);
+    Output.y = fmul(Matrix.m[1][0], Vector.x) + fmul(Matrix.m[1][1],Vector.y) + fmul(Matrix.m[1][2], Vector.z) + fmul(Matrix.m[1][3], Vector.w);
+    Output.z = fmul(Matrix.m[2][0], Vector.x) + fmul(Matrix.m[2][1],Vector.y) + fmul(Matrix.m[2][2], Vector.z) + fmul(Matrix.m[2][3], Vector.w);
+    Output.w = fmul(Matrix.m[3][0], Vector.x) + fmul(Matrix.m[3][1],Vector.y) + fmul(Matrix.m[3][2], Vector.z) + fmul(Matrix.m[3][3], Vector.w);
+    return Output;
+}
+struct vec3 mat3MulVec3(struct mat3 Matrix, struct vec3 Vector)
+{
+    struct vec3 Output;
+    Output.x = fmul(Matrix.m[0][0], Vector.x) + fmul(Matrix.m[0][1],Vector.y) + fmul(Matrix.m[0][2], Vector.z);
+    Output.y = fmul(Matrix.m[1][0], Vector.x) + fmul(Matrix.m[1][1],Vector.y) + fmul(Matrix.m[1][2], Vector.z);
+    Output.z = fmul(Matrix.m[2][0], Vector.x) + fmul(Matrix.m[2][1],Vector.y) + fmul(Matrix.m[2][2], Vector.z);
+    return Output;
+}
+
 int sine(int angle)
 {
     return SIN_LUT[angle];
@@ -77,7 +100,7 @@ int cosine(int angle)
     return SIN_LUT[90-angle];
 }
 
-/*
+
 void debug_vec2(struct vec2 Vec, char Name[])
 {
     dbg_printf("\n%s.x = %f\n", Name, fixed_to_double(Vec.x));
@@ -110,12 +133,16 @@ void debug_matrix4(struct mat4 Matrix, char Name[])
     }
     dbg_printf("\n");
 }
-void debug_obj3_vertices(struct obj3 *Obj, char Name[])
+void debug_matrix3(struct mat3 Matrix, char Name[])
 {
-    dbg_printf("vertices numbers = %d", Obj->vertices_number);
-    for (int i = 0; i < Obj->vertices_number; i++){
-        dbg_printf("\ni = %d", i);
-        debug_vec3(Obj->vertices[i], Name);
+    dbg_printf("%s", Name);
+    for (int i = 0; i < 3; i++){
+        dbg_printf("\n    ");
+        for (int j = 0; j < 3; j++){
+            dbg_printf("[%d] ", Matrix.m[i][j]);
+        }
     }
+    dbg_printf("\n");
 }
-*/
+
+
