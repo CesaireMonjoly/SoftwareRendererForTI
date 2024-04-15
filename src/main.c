@@ -159,8 +159,8 @@ void obj3Process(struct obj3 *Object, struct mat4 MatrixProjection)
     struct vec2 ScreenPoints[3];
 
     struct mat3 RotX = buildRotX(Object->rot.x);
-    struct mat3 RotY = buildRotX(Object->rot.y);
-    struct mat3 RotZ = buildRotX(Object->rot.z);
+    struct mat3 RotY = buildRotY(Object->rot.y);
+    struct mat3 RotZ = buildRotZ(Object->rot.z);
 
     for (int k = 0; k < Object->triangle_number; k++){
         //Retrieves Points related to current triangle (Does three points form a triangle)

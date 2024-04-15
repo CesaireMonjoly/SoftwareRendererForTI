@@ -32,45 +32,58 @@ struct vec2
     fixed_point x;
     fixed_point y;
 };
+/*
+void buildSINLUT(){
+    dbg_printf("const fixed_point SIN_LUT[361] = {");
+    for (int i = 0; i < 361; i++){
+        dbg_printf("%#08x,",double_to_fixed(sin(i * (M_PI/180))));
+        if ((i+1)%10 == 0){
+            dbg_printf("\n");
+        }
+    }
+    dbg_printf("\n};");
+}
+ */
 
+const fixed_point SIN_LUT[361] = {00000000,0x000001,0x000002,0x000003,0x000004,0x000005,0x000006,0x000007,0x000008,0x00000a,
+                                  0x00000b,0x00000c,0x00000d,0x00000e,0x00000f,0x000010,0x000011,0x000012,0x000013,0x000014,
+                                  0x000015,0x000016,0x000017,0x000019,0x00001a,0x00001b,0x00001c,0x00001d,0x00001e,0x00001f,
+                                  0x000020,0x000020,0x000021,0x000022,0x000023,0x000024,0x000025,0x000026,0x000027,0x000028,
+                                  0x000029,0x000029,0x00002a,0x00002b,0x00002c,0x00002d,0x00002e,0x00002e,0x00002f,0x000030,
+                                  0x000031,0x000031,0x000032,0x000033,0x000033,0x000034,0x000035,0x000035,0x000036,0x000036,
+                                  0x000037,0x000037,0x000038,0x000039,0x000039,0x00003a,0x00003a,0x00003a,0x00003b,0x00003b,
+                                  0x00003c,0x00003c,0x00003c,0x00003d,0x00003d,0x00003d,0x00003e,0x00003e,0x00003e,0x00003e,
+                                  0x00003f,0x00003f,0x00003f,0x00003f,0x00003f,0x00003f,0x00003f,0x00003f,0x00003f,0x00003f,
+                                  0x000040,0x00003f,0x00003f,0x00003f,0x00003f,0x00003f,0x00003f,0x00003f,0x00003f,0x00003f,
+                                  0x00003f,0x00003e,0x00003e,0x00003e,0x00003e,0x00003d,0x00003d,0x00003d,0x00003c,0x00003c,
+                                  0x00003c,0x00003b,0x00003b,0x00003a,0x00003a,0x00003a,0x000039,0x000039,0x000038,0x000037,
+                                  0x000037,0x000036,0x000036,0x000035,0x000035,0x000034,0x000033,0x000033,0x000032,0x000031,
+                                  0x000031,0x000030,0x00002f,0x00002e,0x00002e,0x00002d,0x00002c,0x00002b,0x00002a,0x000029,
+                                  0x000029,0x000028,0x000027,0x000026,0x000025,0x000024,0x000023,0x000022,0x000021,0x000020,
+                                  0x000020,0x00001f,0x00001e,0x00001d,0x00001c,0x00001b,0x00001a,0x000019,0x000017,0x000016,
+                                  0x000015,0x000014,0x000013,0x000012,0x000011,0x000010,0x00000f,0x00000e,0x00000d,0x00000c,
+                                  0x00000b,0x00000a,0x000008,0x000007,0x000006,0x000005,0x000004,0x000003,0x000002,0x000001,
+                                  00000000,0xffffff,0xfffffe,0xfffffd,0xfffffc,0xfffffb,0xfffffa,0xfffff9,0xfffff8,0xfffff6,
+                                  0xfffff5,0xfffff4,0xfffff3,0xfffff2,0xfffff1,0xfffff0,0xffffef,0xffffee,0xffffed,0xffffec,
+                                  0xffffeb,0xffffea,0xffffe9,0xffffe7,0xffffe6,0xffffe5,0xffffe4,0xffffe3,0xffffe2,0xffffe1,
+                                  0xffffe1,0xffffe0,0xffffdf,0xffffde,0xffffdd,0xffffdc,0xffffdb,0xffffda,0xffffd9,0xffffd8,
+                                  0xffffd7,0xffffd7,0xffffd6,0xffffd5,0xffffd4,0xffffd3,0xffffd2,0xffffd2,0xffffd1,0xffffd0,
+                                  0xffffcf,0xffffcf,0xffffce,0xffffcd,0xffffcd,0xffffcc,0xffffcb,0xffffcb,0xffffca,0xffffca,
+                                  0xffffc9,0xffffc9,0xffffc8,0xffffc7,0xffffc7,0xffffc6,0xffffc6,0xffffc6,0xffffc5,0xffffc5,
+                                  0xffffc4,0xffffc4,0xffffc4,0xffffc3,0xffffc3,0xffffc3,0xffffc2,0xffffc2,0xffffc2,0xffffc2,
+                                  0xffffc1,0xffffc1,0xffffc1,0xffffc1,0xffffc1,0xffffc1,0xffffc1,0xffffc1,0xffffc1,0xffffc1,
+                                  0xffffc0,0xffffc1,0xffffc1,0xffffc1,0xffffc1,0xffffc1,0xffffc1,0xffffc1,0xffffc1,0xffffc1,
+                                  0xffffc1,0xffffc2,0xffffc2,0xffffc2,0xffffc2,0xffffc3,0xffffc3,0xffffc3,0xffffc4,0xffffc4,
+                                  0xffffc4,0xffffc5,0xffffc5,0xffffc6,0xffffc6,0xffffc6,0xffffc7,0xffffc7,0xffffc8,0xffffc9,
+                                  0xffffc9,0xffffca,0xffffca,0xffffcb,0xffffcb,0xffffcc,0xffffcd,0xffffcd,0xffffce,0xffffcf,
+                                  0xffffcf,0xffffd0,0xffffd1,0xffffd2,0xffffd2,0xffffd3,0xffffd4,0xffffd5,0xffffd6,0xffffd7,
+                                  0xffffd7,0xffffd8,0xffffd9,0xffffda,0xffffdb,0xffffdc,0xffffdd,0xffffde,0xffffdf,0xffffe0,
+                                  0xffffe0,0xffffe1,0xffffe2,0xffffe3,0xffffe4,0xffffe5,0xffffe6,0xffffe7,0xffffe9,0xffffea,
+                                  0xffffeb,0xffffec,0xffffed,0xffffee,0xffffef,0xfffff0,0xfffff1,0xfffff2,0xfffff3,0xfffff4,
+                                  0xfffff5,0xfffff6,0xfffff8,0xfffff9,0xfffffa,0xfffffb,0xfffffc,0xfffffd,0xfffffe,0xffffff,
+                                  00000000
+};
 
-const int24_t SIN_LUT[361] = {0, 1, 2, 3, 4, 6, 7, 8, 9, 10,
-                              11, 12, 13, 14, 15, 17, 18, 19, 20, 21,
-                              22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
-                              32, 33, 34, 35, 36, 37, 38, 39, 39, 40,
-                              41, 42, 43, 44, 44, 45, 46, 47, 48, 48,
-                              49, 50, 50, 51, 52, 52, 53, 54, 54, 55,
-                              55, 56, 57, 57, 58, 58, 58, 59, 59, 60,
-                              60, 61, 61, 61, 62, 62, 62, 62, 63, 63,
-                              63, 63, 63, 64, 64, 64, 64, 64, 64, 64,
-                              64, 64, 64, 64, 64, 64, 64, 64, 63, 63,
-                              63, 63, 63, 62, 62, 62, 62, 61, 61, 61,
-                              60, 60, 59, 59, 58, 58, 58, 57, 57, 56,
-                              55, 55, 54, 54, 53, 52, 52, 51, 50, 50,
-                              49, 48, 48, 47, 46, 45, 44, 44, 43, 42,
-                              41, 40, 39, 39, 38, 37, 36, 35, 34, 33,
-                              32, 31, 30, 29, 28, 27, 26, 25, 24, 23,
-                              22, 21, 20, 19, 18, 17, 15, 14, 13, 12,
-                              11, 10, 9, 8, 7, 6, 4, 3, 2, 1,
-                              0, -1, -2, -3, -4, -6, -7, -8, -9, -10,
-                              -11, -12, -13, -14, -15, -17, -18, -19, -20, -21,
-                              -22, -23, -24, -25, -26, -27, -28, -29, -30, -31,
-                              -32, -33, -34, -35, -36, -37, -38, -39, -39, -40,
-                              -41, -42, -43, -44, -44, -45, -46, -47, -48, -48,
-                              -49, -50, -50, -51, -52, -52, -53, -54, -54, -55,
-                              -55, -56, -57, -57, -58, -58, -58, -59, -59, -60,
-                              -60, -61, -61, -61, -62, -62, -62, -62, -63, -63,
-                              -63, -63, -63, -64, -64, -64, -64, -64, -64, -64,
-                              -64, -64, -64, -64, -64, -64, -64, -64, -63, -63,
-                              -63, -63, -63, -62, -62, -62, -62, -61, -61, -61,
-                              -60, -60, -59, -59, -58, -58, -58, -57, -57, -56,
-                              -55, -55, -54, -54, -53, -52, -52, -51, -50, -50,
-                              -49, -48, -48, -47, -46, -45, -44, -44, -43, -42,
-                              -41, -40, -39, -39, -38, -37, -36, -35, -34, -33,
-                              -32, -31, -30, -29, -28, -27, -26, -25, -24, -23,
-                              -22, -21, -20, -19, -18, -17, -15, -14, -13, -12,
-                              -11, -10, -9, -8, -7, -6, -4, -3, -2, -1,
-                              0};
 
 struct vec4 mat4MulVec4(struct mat4 Matrix, struct vec4 Vector)
 {
