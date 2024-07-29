@@ -2,46 +2,27 @@
 #include <keypadc.h>
 #include <graphx.h>
 #include <debug.h>
+#include <math.h>
 
 #include "obj.h"
 
 
 void buildMatrixProjection(fixed_point Fov, fixed_point AspectRatio, fixed_point ZNear, fixed_point ZFar, struct mat4 *MatrixProjection)
 {
-    MatrixProjection->m[0][0] = int_to_fixed(1);//fmul(double_to_fixed(1/tan(fixed_to_double(Fov)/2)), AspectRatio);
-    MatrixProjection->m[1][1] = int_to_fixed(1);//double_to_fixed(1/tan(fixed_to_double(Fov)/2));
-    MatrixProjection->m[2][2] = int_to_fixed(1);//fdiv(ZFar, (ZFar - ZNear));
-    MatrixProjection->m[3][2] = int_to_fixed(1);//fdiv(fmul(-ZFar, ZNear),(ZFar-ZNear));
+
+/*
+    MatrixProjection->m[0][0] = fmul(double_to_fixed(1/tan(fixed_to_double(Fov)/2)), AspectRatio);
+    MatrixProjection->m[1][1] = double_to_fixed(1/tan(fixed_to_double(Fov)/2));
+    MatrixProjection->m[2][2] = fdiv(ZFar, (ZFar - ZNear));
+    MatrixProjection->m[3][2] = fdiv(fmul(-ZFar, ZNear),(ZFar-ZNear));
     MatrixProjection->m[2][3] = int_to_fixed(1);
-
+*/
+    MatrixProjection->m[0][0] = int_to_fixed(1);
+    MatrixProjection->m[1][1] = int_to_fixed(1);
+    MatrixProjection->m[2][2] = int_to_fixed(1);
+    MatrixProjection->m[3][2] = int_to_fixed(1);
+    MatrixProjection->m[2][3] = int_to_fixed(1);
     //debug_matrix4(*MatrixProjection, "Matrix projection");
-}
-
-struct vec4 extendVec3(struct vec3 Vector, int Value)
-{
-    struct vec4 Vector4;
-    Vector4.x = Vector.x;
-    Vector4.y = Vector.y;
-    Vector4.z = Vector.z;
-    Vector4.w = Value;
-    return Vector4;
-}
-
-struct vec3 reduceVec4(struct vec4 Vector)
-{
-    struct vec3 Vector3;
-    Vector3.x = Vector.x;
-    Vector3.y = Vector.y;
-    Vector3.z = Vector.z;
-    return Vector3;
-}
-
-struct vec2 reduceVec3(struct vec3 Vector)
-{
-    struct vec2 Vector2;
-    Vector2.x = Vector.x;
-    Vector2.y = Vector.y;
-    return Vector2;
 }
 
 
@@ -71,41 +52,11 @@ void obj3Move(struct obj3 *Object, struct vec3 Vector)
     Object->pos.z += Vector.z;
 }
 
-/*
-struct mat3 buildRot(struct vec3 Angle)
-{
-    struct vec3 cos;
-    struct vec3 sin;
-    cos.x = cosine(Angle.x);
-    cos.y = cosine(Angle.y);
-    cos.z = cosine(Angle.z);
-    sin.x = sine(Angle.x);
-    sin.y = sine(Angle.y);
-    sin.z = sine(Angle.z);
-
-    struct mat3 RotMatrix;
-
-    // see https://en.wikipedia.org/wiki/Rotation_matrix#General_3D_rotations
-    RotMatrix.m[0][0] = fmul(cos.y, cos.z);
-    RotMatrix.m[0][1] = fmul(sin.x, fmul(sin.y, cos.z)) - fmul(cos.x, sin.z);
-    RotMatrix.m[0][2] = fmul(cos.x, fmul(sin.y, cos.z)) + fmul(sin.x, sin.z);
-
-    RotMatrix.m[1][0] = fmul(cos.y, sin.z);
-    RotMatrix.m[1][1] = fmul(sin.x, fmul(sin.y, sin.z)) - fmul(cos.x, cos.z);
-    RotMatrix.m[1][2] = fmul(cos.x, fmul(sin.y, sin.z)) - fmul(sin.x, cos.z);
-
-    RotMatrix.m[2][0] = fmul(int_to_fixed(-1), sin.y);
-    RotMatrix.m[2][1] = fmul(sin.x, cos.y);
-    RotMatrix.m[2][2] = fmul(cos.x, cos.y);
-
-    return RotMatrix;
-}
-*/
 
 struct mat3 buildRotX(int angle)
 {
-    int cos = cosine(angle);
-    int sin = sine(angle);
+    fixed_point cos = cosine(angle);
+    fixed_point sin = sine(angle);
     fixed_point identity = int_to_fixed(1);
     struct mat3 rotX = {{
                                 {identity, 0, 0},
@@ -117,8 +68,8 @@ struct mat3 buildRotX(int angle)
 
 struct mat3 buildRotY(int angle)
 {
-    int cos = cosine(angle);
-    int sin = sine(angle);
+    fixed_point cos = cosine(angle);
+    fixed_point sin = sine(angle);
     fixed_point identity = int_to_fixed(1);
     struct mat3 rotY = {{
                                 {cos, 0, sin},
@@ -130,8 +81,8 @@ struct mat3 buildRotY(int angle)
 
 struct mat3 buildRotZ(int angle)
 {
-    int cos = cosine(angle);
-    int sin = sine(angle);
+    fixed_point cos = cosine(angle);
+    fixed_point sin = sine(angle);
     fixed_point identity = int_to_fixed(1);
     struct mat3 rotZ = {{
                                 {cos, -sin, 0},
@@ -142,11 +93,9 @@ struct mat3 buildRotZ(int angle)
 }
 
 
-struct vec3 RotPoint(struct vec3 Point, struct mat3 RotX, struct mat3 RotY, struct mat3 RotZ){
+struct vec3 RotatePoint(struct vec3 Point, struct mat3 Rot){
 
-    Point =  mat3MulVec3(RotZ, Point);
-    Point =  mat3MulVec3(RotY, Point);
-    Point =  mat3MulVec3(RotX, Point);
+    Point = mat3MulVec3(Rot, Point);
     return Point;
 }
 
@@ -158,8 +107,13 @@ void obj3Process(struct obj3 *Object, struct mat4 MatrixProjection)
     struct vec3 Points[3];
     struct vec2 ScreenPoints[3];
 
+    //dbg_printf("RotX = %d\n", (Object->rot.x));
     struct mat3 RotX = buildRotX(Object->rot.x);
+
+    dbg_printf("RotY = %d\n", (Object->rot.y));
     struct mat3 RotY = buildRotY(Object->rot.y);
+
+    //dbg_printf("RotZ = %d\n", (Object->rot.z));
     struct mat3 RotZ = buildRotZ(Object->rot.z);
 
     for (int k = 0; k < Object->triangle_number; k++){
@@ -169,10 +123,10 @@ void obj3Process(struct obj3 *Object, struct mat4 MatrixProjection)
         Points[2] = Object->vertices[Object->triangles[k].z];
 
         //Rotate Points with rotation matrix
-        Points[0] = RotPoint(Points[0], RotX, RotY, RotZ);
-        Points[1] = RotPoint(Points[1], RotX, RotY, RotZ);
-        Points[2] = RotPoint(Points[2], RotX, RotY, RotZ);
-
+        struct mat3 RotMatrix = mat3Mul(mat3Mul(RotX, RotY), RotZ);
+        Points[0] = RotatePoint(Points[0], RotMatrix);
+        Points[1] = RotatePoint(Points[1], RotMatrix);
+        Points[2] = RotatePoint(Points[2], RotMatrix);
 
         //Place Points in space with object's position
         Points[0].x += Object->pos.x;
@@ -198,7 +152,7 @@ void obj3Process(struct obj3 *Object, struct mat4 MatrixProjection)
         ScreenPoints[2] = screenSpace(ScreenPoints[2]);
 
         //Draw Lines on the screen
-        gfx_SetColor(randInt(2, 255)); // Make it funky
+        //gfx_SetColor(randInt(2, 255)); // Make it funky
         gfx_Line(ScreenPoints[0].x, ScreenPoints[0].y, ScreenPoints[1].x, ScreenPoints[1].y);
         gfx_Line(ScreenPoints[1].x, ScreenPoints[1].y, ScreenPoints[2].x, ScreenPoints[2].y);
         gfx_Line(ScreenPoints[2].x, ScreenPoints[2].y, ScreenPoints[0].x, ScreenPoints[0].y);
@@ -251,7 +205,7 @@ int GenerateCubeObject(int Size, struct obj3 *Cube)
     return 0;
 }
 
-void InputMovement(struct vec3 *Movement)
+void InputMovement(struct vec3 *Movement, struct uint_vec3 *Rotation)
 {
     Movement->x = 0;
     Movement->y = 0;
@@ -278,6 +232,27 @@ void InputMovement(struct vec3 *Movement)
         Movement->y = int_to_fixed(-20);
     }
 
+    if (kb_4 & kb_Data[3]){
+        Rotation->y = (Rotation->y + 3) % 360;
+    }
+    else if (kb_6 & kb_Data[5]){
+        Rotation->y = (Rotation->y + (360 - 3)) % 360;
+    }
+    if (kb_8 & kb_Data[4]){
+        Rotation->x = (Rotation->x + 3) % 360;
+    }
+    else if (kb_2 & kb_Data[4]){
+        Rotation->x = (Rotation->x + (360 - 3)) % 360;
+    }
+    if (kb_7 & kb_Data[3]){
+        Rotation->z = (Rotation->z + 3) % 360;
+    }
+    else if (kb_9 & kb_Data[5]){
+        Rotation->z = (Rotation->z + (360 - 3)) % 360;
+    }
+
+
+
 }
 
 
@@ -299,24 +274,13 @@ int main(void)
     GenerateCubeObject(int_to_fixed(150), &Cube);
 
     //Movement Vector
-    struct vec3 MovementVector = {int_to_fixed(80), int_to_fixed(10), int_to_fixed(120)};
+    struct vec3 MovementVector = {int_to_fixed(80), int_to_fixed(60), int_to_fixed(200)};
     obj3Move(&Cube, MovementVector);
 
     do {
-        InputMovement(&MovementVector);
+        InputMovement(&MovementVector, &Cube.rot);
         obj3Move(&Cube, MovementVector);
-        kb_Scan();
-        if (kb_5 & kb_Data[4]){
-            Cube.rot.x += 1;
-            Cube.rot.y += 1;
-            Cube.rot.z += 1;
-        }
-        if (kb_1 & kb_Data[3]){ // replace cube to 0, 0, 0
-            MovementVector.x = -Cube.pos.x;
-            MovementVector.y = -Cube.pos.y;
-            MovementVector.z = -Cube.pos.z;
-            obj3Move(&Cube, MovementVector);
-        }
+
         obj3Process(&Cube, MatrixProjection);
         gfx_SetColor(0);
         gfx_SwapDraw();

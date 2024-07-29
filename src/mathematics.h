@@ -5,6 +5,12 @@
 #define MAX_TRIANGLES (MAX_VERTICES * 2)
 
 
+struct uint_vec3{
+    uint16_t x;
+    uint16_t y;
+    uint16_t z;
+};
+
 struct mat4
 {
     fixed_point m[4][4];
@@ -32,6 +38,34 @@ struct vec2
     fixed_point x;
     fixed_point y;
 };
+
+struct vec4 extendVec3(struct vec3 Vector, int Value)
+{
+    struct vec4 Vector4;
+    Vector4.x = Vector.x;
+    Vector4.y = Vector.y;
+    Vector4.z = Vector.z;
+    Vector4.w = Value;
+    return Vector4;
+}
+
+struct vec3 reduceVec4(struct vec4 Vector)
+{
+    struct vec3 Vector3;
+    Vector3.x = Vector.x;
+    Vector3.y = Vector.y;
+    Vector3.z = Vector.z;
+    return Vector3;
+}
+
+struct vec2 reduceVec3(struct vec3 Vector)
+{
+    struct vec2 Vector2;
+    Vector2.x = Vector.x;
+    Vector2.y = Vector.y;
+    return Vector2;
+}
+
 /*
 void buildSINLUT(){
     dbg_printf("const fixed_point SIN_LUT[361] = {");
@@ -43,7 +77,7 @@ void buildSINLUT(){
     }
     dbg_printf("\n};");
 }
- */
+*/
 
 const fixed_point SIN_LUT[361] = {00000000,0x000001,0x000002,0x000003,0x000004,0x000005,0x000006,0x000007,0x000008,0x00000a,
                                   0x00000b,0x00000c,0x00000d,0x00000e,0x00000f,0x000010,0x000011,0x000012,0x000013,0x000014,
@@ -103,14 +137,31 @@ struct vec3 mat3MulVec3(struct mat3 Matrix, struct vec3 Vector)
     return Output;
 }
 
+struct mat3 mat3Mul(struct mat3 Matrix0, struct mat3 Matrix1)
+{
+    struct mat3 result;
+
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            result.m[i][j] = 0;
+            for (int k = 0; k < 3; k++) {
+                result.m[i][j] += fmul(Matrix0.m[i][k], Matrix1.m[k][j]);
+            }
+        }
+    }
+    return result;
+
+}
+
 int sine(int angle)
 {
+    angle = angle%361;
     return SIN_LUT[angle];
 }
 
 int cosine(int angle)
 {
-    return SIN_LUT[90-angle];
+    return SIN_LUT[(angle+90)%361];
 }
 
 

@@ -1,5 +1,5 @@
 #include <tice.h>
-# include "math.h"
+# include "mathematics.h"
 
 #define ASPECT_RATIO 1.33333
 #define MAX_VERTICES 64
@@ -12,7 +12,7 @@ struct obj3
     int triangle_number;
     struct vec3 triangles[MAX_TRIANGLES]; // vec3 {x, y, z} with x, y and z the index of vertices that can form a triangle
     struct vec3 pos;
-    struct vec3 rot;
+    struct uint_vec3 rot;
 };
 struct cam
 {
